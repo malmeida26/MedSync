@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MedSync</string>
+    <string name="title_activity_tela_menu">TelaMenu</string>
+</resources>
