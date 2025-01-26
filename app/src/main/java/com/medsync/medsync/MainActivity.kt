@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -106,7 +107,8 @@ fun LoginTela(){
 
 
     //NAVEGACAO
-    val intent = Intent(contexto, TelaMenu::class.java)  // Esse é do Botão. Leva pra a tela de Menu
+    val intentCadastro = Intent(contexto, TelaCadastro::class.java)  // Esse é o Sou Novo Aqui. Leva pra a tela de Cadastro
+    val intentMenu = Intent(contexto, TelaMenu::class.java)  // Esse é o Login. Leva pra a tela de Menu
 
 
     Column(
@@ -180,8 +182,8 @@ fun LoginTela(){
                         .onFocusChanged { focusState ->
                             clicadoEmail = focusState.isFocused
                         }
-                        .width(700.dp)
-                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 50.dp, end = 50.dp)
                 )//Fim textField1 (Email)
 
 
@@ -235,28 +237,32 @@ fun LoginTela(){
                         .onFocusChanged { focusState ->
                             clicadoSenha = focusState.isFocused
                         }
-                        .width(700.dp)
-                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 50.dp, end = 50.dp)
                 )// Fim textField2 (Senha)
 
                 //Textos Clicaveis --> TO-DO: falta a navegação e as telas
                 Row(modifier = Modifier
-                    .width(700.dp)
-                    .padding(10.dp)
+                    .fillMaxWidth()
+                    .padding(30.dp)
                     .background(Color.Blue),
-                    horizontalArrangement = Arrangement.spacedBy(328.dp)
                 ) {
-                    Text(text = "Sou novo aqui",
-                        style = TextStyle(color = Color.LightGray),
-                        maxLines = 1,
-                        modifier = Modifier.clickable {  }
-                    )
+                        Text(text = "Sou novo aqui",
+                            style = TextStyle(color = Color.LightGray),
+                            maxLines = 1,
+                            modifier = Modifier
+                                .clickable {
+                                    contexto.startActivity(intentCadastro)
+                                },
+                        )
 
-                    Text(text = "Esqueci minha senha",
-                        style = TextStyle(color = Color.LightGray),
-                        maxLines = 1,
-                        modifier = Modifier.clickable {  }
-                    )
+                        Text(text = "Esqueci minha senha",
+                            style = TextStyle(color = Color.LightGray),
+                            maxLines = 1,
+                            modifier = Modifier
+                                .clickable {  },
+                        )
+
                 }
 
                 Spacer(modifier = Modifier.height(70.dp))
@@ -270,7 +276,7 @@ fun LoginTela(){
                             Toast.makeText(contexto, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
                         }else{
                             Toast.makeText(contexto, "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
-                            contexto.startActivity(intent)
+                            contexto.startActivity(intentMenu)
                         }
 
                     }
