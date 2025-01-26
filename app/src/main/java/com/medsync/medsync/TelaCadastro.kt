@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,6 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.medsync.medsync.ui.theme.MedSyncTheme
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class TelaCadastro : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +57,11 @@ fun Cadastro() {
     var emailCadastro by remember { mutableStateOf("") }
     var senhaCadastro by remember { mutableStateOf("") }
     var confirmarSenhaCadastro by remember { mutableStateOf("") }
+
+//    Firebase
+    var auth = Firebase.auth
+
+
 
 //    Coluna Base. Meu deus n mexe nesse
     Column(modifier = Modifier
@@ -95,7 +103,7 @@ fun Cadastro() {
                     value = nomeCadastro,
                     onValueChange = { nomeCadastro = it },
                     maxLines = 1,
-                    placeholder = { Text(text = "Digite seu nome") },
+                    placeholder = { Text(text = "Nome") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp)
@@ -123,7 +131,6 @@ fun Cadastro() {
                     shape = RoundedCornerShape(40.dp),
                 )
             }
-
         } // FIM DO ROW QUE CONTEM NOME E SOBRENOME
 
 
@@ -142,7 +149,7 @@ fun Cadastro() {
                 value = emailCadastro,
                 onValueChange = { emailCadastro = it },
                 maxLines = 1,
-                placeholder = { Text(text = "Digite seu email") },
+                placeholder = { Text(text = "Email") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
@@ -156,7 +163,7 @@ fun Cadastro() {
                 value = senhaCadastro,
                 onValueChange = { senhaCadastro = it },
                 maxLines = 1,
-                placeholder = { Text(text = "Crie sua senha") },
+                placeholder = { Text(text = "Senha") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
@@ -170,7 +177,7 @@ fun Cadastro() {
                 value = confirmarSenhaCadastro,
                 onValueChange = { confirmarSenhaCadastro = it },
                 maxLines = 1,
-                placeholder = { Text(text = "Confirme sua senha") },
+                placeholder = { Text(text = "Confirmar senha") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
@@ -187,7 +194,21 @@ fun Cadastro() {
             .fillMaxWidth()
             .weight(2f)
             .background(color = Color.Blue) // <- cor de fundo. Alterem depois
-        ) {  }
+        ) {
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 30.dp, end = 30.dp)
+                .padding(top = 20.dp, bottom = 15.dp),
+
+                onClick = {
+                    //Sisteminha de inserir credenciais no banco.
+                    Firebase.auth.createUserWithEmailAndPassword(emailCadastro, senhaCadastro)
+                }
+
+            ) {
+                Text(text = "Cadastrar")
+            }
+        }
 
 
 

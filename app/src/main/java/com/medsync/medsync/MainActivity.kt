@@ -46,7 +46,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.stackmobile.R
+import com.example.medsync.R
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            //configureFirebaseServices()
             LoginTela()
         }
     }
@@ -64,7 +65,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LoginTela(){
-
     //LOGIN
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
@@ -72,6 +72,7 @@ fun LoginTela(){
 
     //FIREBASE
     val auth = Firebase.auth
+
     Log.i(TAG, "onCreate: ${auth.currentUser}")
 
     /*
@@ -94,7 +95,6 @@ fun LoginTela(){
         "admin@fmm.org.br",
         "123456"
     )
-
 
     //CADASTRO
     var clicadoEmail by remember { mutableStateOf(false) }

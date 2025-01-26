@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.stackmobile"
+    namespace = "com.example.medsync"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.stackmobile"
+        applicationId = "com.example.medsync"
         minSdk = 25
         targetSdk = 35
         versionCode = 1
