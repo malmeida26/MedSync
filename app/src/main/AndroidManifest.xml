@@ -13,20 +13,28 @@
         android:theme="@style/Theme.MedSync"
         tools:targetApi="31">
         <activity
+            android:name="com.medsync.medsync.TelaPerfil"
+            android:exported="false"
+            android:label="@string/title_activity_tela_perfil"
+            android:theme="@style/Theme.MedSync" />
+        <activity
             android:name="com.medsync.medsync.TelaMenu"
             android:exported="true"
             android:label="@string/title_activity_tela_menu"
-            android:theme="@style/Theme.MedSync" />
+            android:theme="@style/Theme.MedSync"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name="com.medsync.medsync.TelaCadastro"
             android:exported="true"
             android:label="@string/title_activity_tela_cadastro"
-            android:theme="@style/Theme.MedSync" />
+            android:theme="@style/Theme.MedSync"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name="com.medsync.medsync.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.MedSync">
+            android:theme="@style/Theme.MedSync"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

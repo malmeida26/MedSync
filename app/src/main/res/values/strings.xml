@@ -3,4 +3,5 @@
     <string name="title_activity_tela_menu">TelaMenu</string>
     <string name="title_activity_tela_cadastro">TelaCadastro</string>
     <string name="title_activity_tela_menus3">TelaMenus3</string>
+    <string name="title_activity_tela_perfil">TelaPerfil</string>
 </resources>
