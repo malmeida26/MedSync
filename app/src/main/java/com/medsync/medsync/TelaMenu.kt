@@ -120,7 +120,7 @@ class TelaMenu : ComponentActivity() {
                                         selectedItem = item
                                         //nao volta pra tela A, só vai pra B
                                         val route = when(text){
-                                            "tela A" -> "telaA"
+                                            "Menu" -> "telaA"
                                             else -> "telaB"
                                         }
                                         navController.navigate(route, navOptions = navOptions {
@@ -152,8 +152,10 @@ fun Menu() {
     //NAVEGAÇÃO
     var context = LocalContext.current
 
-    var intentMenu = Intent(context, TelaMenu::class.java)
+   /* var intentMenu = Intent(context, TelaMenu::class.java)
     var intentPerfil = Intent(context, TelaPerfil::class.java)
+
+    */
 
     Column(
         modifier = Modifier
@@ -204,7 +206,7 @@ fun Menu() {
                         Icon(
                             imageVector = Icons.Rounded.Menu,
                             contentDescription = "MedSync"
-                        ) // TO-DO tem que colocar uma imagem aqui
+                        ) // TODO tem que colocar uma imagem aqui
                         Text(text = "Olá MedSync!")
                     }
                 }
@@ -247,7 +249,7 @@ fun Menu() {
                         Icon(
                             imageVector = Icons.Rounded.Menu,
                             contentDescription = "MedSync"
-                        ) // TO-DO tem que colocar uma imagem aqui
+                        ) // TODO tem que colocar uma imagem aqui
                         Text(text = "Olá MedSync!")
                     }
                 }

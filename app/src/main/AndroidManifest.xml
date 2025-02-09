@@ -24,7 +24,7 @@
             android:theme="@style/Theme.MedSync"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name="com.medsync.medsync.TelaCadastro"
+            android:name="com.medsync.medsync.cadastro.TelaCadastro"
             android:exported="true"
             android:label="@string/title_activity_tela_cadastro"
             android:theme="@style/Theme.MedSync"
