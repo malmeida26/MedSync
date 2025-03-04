@@ -11,6 +11,10 @@ activityCompose = "1.10.0"
 composeBom = "2024.04.01"
 navigationCompose = "2.8.5"
 firebaseAuthKtx = "23.2.0"
+firebaseFirestoreKtx = "25.1.2"
+firebaseDatabase = "21.0.0"
+barcodeScanningCommon = "17.0.0"
+playServicesMlkitBarcodeScanning = "18.3.1"
 
 
 [libraries]
@@ -32,8 +36,14 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-material-icon-extended = { group = "androidx.compose.material", name = "material-icons-extedend" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+barcode-scanning-common = { group = "com.google.mlkit", name = "barcode-scanning-common", version.ref = "barcodeScanningCommon" }
+play-services-mlkit-barcode-scanning = { group = "com.google.android.gms", name = "play-services-mlkit-barcode-scanning", version.ref = "playServicesMlkitBarcodeScanning" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

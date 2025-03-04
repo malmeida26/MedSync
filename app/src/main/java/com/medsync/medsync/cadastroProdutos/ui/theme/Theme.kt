@@ -1,4 +1,4 @@
-package com.medsync.medsync.ui.theme
+package com.medsync.medsync.cadastroProdutos.ui.theme
 
 import android.app.Activity
 import android.os.Build

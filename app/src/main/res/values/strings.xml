@@ -4,4 +4,13 @@
     <string name="title_activity_tela_cadastro">TelaCadastro</string>
     <string name="title_activity_tela_menus3">TelaMenus3</string>
     <string name="title_activity_tela_perfil">TelaPerfil</string>
+    <string name="title_activity_esqueci_senha">esqueciSenha</string>
+    <string name="title_activity_esqueci_senha_numero">esqueciSenhaNumero</string>
+    <string name="title_activity_teste">teste</string>
+    <string name="title_activity_cadastrar_produtos">CadastrarProdutos</string>
+    <string name="title_activity_desempenho">desempenho</string>
+    <string name="title_activity_estoque">estoque</string>
+    <string name="title_activity_vender">vender</string>
+    <string name="title_activity_whatsapp">whatsapp</string>
+    <string name="title_activity_test">test</string>
 </resources>

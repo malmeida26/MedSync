@@ -28,7 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
-import com.medsync.medsync.ui.theme.MedSyncTheme
+import com.medsync.medsync.ui.theme.ui.theme.MedSyncTheme
 
 class TelaPerfil : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
