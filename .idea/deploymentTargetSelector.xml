@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-03-02T16:31:36.703009600Z">
+        <DropdownSelection timestamp="2025-03-05T23:33:51.244873100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RXCX40223AM" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RX2W800Y3VY" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -26,14 +26,27 @@
       </SelectionState>
       <SelectionState runConfigName="Menu">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-03-01T23:58:36.664326200Z">
+        <DropdownSelection timestamp="2025-03-09T22:44:15.147217600Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RXCX40223AM" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RX2W800Y3VY" />
             </handle>
           </Target>
         </DropdownSelection>
-        <DialogSelection />
+        <DialogSelection>
+          <targets>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=RXCX40223AM" />
+              </handle>
+            </Target>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=RX2W800Y3VY" />
+              </handle>
+            </Target>
+          </targets>
+        </DialogSelection>
       </SelectionState>
       <SelectionState runConfigName="GreetingPreview">
         <option name="selectionMode" value="DROPDOWN" />
@@ -66,6 +79,15 @@
         </DialogSelection>
       </SelectionState>
       <SelectionState runConfigName="EsqueciSenha">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="Unnamed">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="Estoque">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="Vender">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

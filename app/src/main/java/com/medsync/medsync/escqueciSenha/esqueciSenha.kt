@@ -119,17 +119,15 @@ class esqueciSenha : ComponentActivity() {
 
                                 Box(
                                     Modifier
-                                        .wrapContentSize()
-                                        .background(Blue20, shape = RoundedCornerShape(15.dp)),
+                                        .wrapContentSize(),
+                                        //.background(Blue20, shape = RoundedCornerShape(15.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    IconButton(onClick = { context.startActivity(intentPerfil) }) {
+                                    IconButton(onClick = {}) {
                                         Icon(
                                             imageVector = Icons.Filled.Home,
                                             contentDescription = null,
-                                            tint = Blue10,
-                                            modifier = Modifier.size(44.dp),
-
+                                            tint = Color.White,
                                             )
                                     }
                                 }
@@ -221,14 +219,14 @@ fun esqueciSenha(modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier
                 .weight(2f)
-                .padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally
+                .padding(50.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             // informações
             Column(
                 modifier = Modifier
                     .background(Blue20, shape = RoundedCornerShape(50.dp))
-                    .wrapContentSize()
+                    .fillMaxWidth()
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

@@ -40,3 +40,10 @@ val interThin = FontFamily(
         weight = FontWeight.Thin
     )
 )
+
+val interMedium = FontFamily(
+    Font(
+        R.font.inter_medium,
+        weight = FontWeight.Thin
+    )
+)

@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,6 +70,35 @@ class TelaMenu : ComponentActivity() {
         setContent {
             MedSyncTheme {
 
+                // hover do botão
+                val interactionSource = remember { MutableInteractionSource() }
+                val interactionSource2 = remember { MutableInteractionSource() }
+
+                val isPressed by interactionSource.collectIsPressedAsState() //começa com false
+                val isPressed2 by interactionSource2.collectIsPressedAsState() //começa com false
+
+                val iconColor = if(isPressed){
+                    Color.White
+                }else{
+                    Blue10
+                }
+                val iconBackgroundColor = if(isPressed){
+                    Blue10
+                }else{
+                    Blue20
+                }
+
+                val iconColor2 = if(isPressed2){
+                    Color.White
+                }else{
+                    Blue10
+                }
+                val iconBackgroundColor2 = if(isPressed2){
+                    Blue10
+                }else{
+                    Blue20
+                }
+
                 val context = LocalContext.current
                 val intentVoltar = Intent(context, MainActivity::class.java)
                 val intentMenu = Intent(context, TelaMenu::class.java)
@@ -87,12 +118,12 @@ class TelaMenu : ComponentActivity() {
 
                             Box(Modifier
                                 .wrapContentSize()
-                                .background(Blue20, shape = RoundedCornerShape(15.dp)), contentAlignment = Alignment.Center){
-                                IconButton(onClick = { context.startActivity(intentVoltar) }) {
+                                .background(iconBackgroundColor, shape = RoundedCornerShape(15.dp)), contentAlignment = Alignment.Center){
+                                IconButton(onClick = { context.startActivity(intentVoltar)}, interactionSource = interactionSource) {
                                     Icon(
                                         imageVector = Icons.Filled.ArrowBackIosNew,
                                         contentDescription = null,
-                                        tint = Blue10,
+                                        tint = iconColor,
                                         modifier = Modifier.size(44.dp)
 
                                     )
@@ -100,7 +131,7 @@ class TelaMenu : ComponentActivity() {
                             }
 
                             Box(Modifier.wrapContentSize()) {
-                                IconButton(onClick = { context.startActivity(intentMenu) }) {
+                                IconButton(onClick = {  }) {
                                     Icon(
                                         imageVector = Icons.Filled.Home,
                                         contentDescription = null,
@@ -112,15 +143,14 @@ class TelaMenu : ComponentActivity() {
 
                             Box(Modifier
                                 .wrapContentSize()
-                                .background(Blue20, shape = RoundedCornerShape(15.dp)), contentAlignment = Alignment.Center) {
-                                IconButton(onClick = { context.startActivity(intentPerfil) }) {
+                                .background(iconBackgroundColor2, shape = RoundedCornerShape(15.dp)), contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(onClick = { context.startActivity(intentPerfil) }, interactionSource = interactionSource2 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Person,
                                         contentDescription = null,
-                                        tint = Blue10,
-                                        modifier = Modifier.size(44.dp),
-
-                                        )
+                                        tint = iconColor2,
+                                        modifier = Modifier.size(44.dp),)
                                 }
                             }
                         }
@@ -194,7 +224,7 @@ fun Menu(modifier: Modifier = Modifier) {
     Column(modifier = Modifier
         .fillMaxSize()
         .background(Color.White)
-        .padding(20.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally)
+        .padding(50.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally)
     {
 
         // contem as opções

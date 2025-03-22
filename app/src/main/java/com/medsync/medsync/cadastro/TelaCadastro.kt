@@ -8,11 +8,19 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,9 +28,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
@@ -39,6 +49,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -59,9 +71,13 @@ import com.medsync.medsync.MainActivity
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.Blue30
+import com.medsync.medsync.ui.theme.ui.theme.GreenToast
+import com.medsync.medsync.ui.theme.ui.theme.RedText
 import com.medsync.medsync.ui.theme.ui.theme.interBold
 import com.medsync.medsync.ui.theme.ui.theme.interThin
 import com.medsync.medsync.ui.theme.ui.theme.quickSand
+import com.medsync.medsync.ui.theme.ui.theme.quickSandBold
+import kotlinx.coroutines.delay
 
 class TelaCadastro : ComponentActivity() {
 
@@ -86,6 +102,21 @@ fun Cadastro() {
     var confirmarSenhaCadastro: String by remember { mutableStateOf("") }
     var numero by remember { mutableStateOf("") }
 
+    // hover do botão
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val buttonColor = if(isPressed){
+        Blue20
+    }else{
+        Blue10
+    }
+
+    val textButtonColor = if(isPressed){
+        Blue10
+    }else{
+        Color.White
+    }
+
 
 //    MENSAGENS
     var context = LocalContext.current
@@ -94,7 +125,9 @@ fun Cadastro() {
     var auth = Firebase.auth
 
 //    NAVEGAÇÃO
-    var intentLogin = Intent(context, MainActivity::class.java)
+    var showToastCampos by remember { mutableStateOf(false) }
+    var showToastLogue by remember { mutableStateOf(false) }
+    val intentLogin = Intent(context, MainActivity::class.java)
 
 //    Text Field
     var clicadoSenha by remember { mutableStateOf(false) }
@@ -137,7 +170,7 @@ fun Cadastro() {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = null,
-                        modifier = Modifier.padding(bottom = 25.dp)
+                        modifier = Modifier.size(300.dp).padding(bottom = 25.dp)
                     )
                     //                Nome
                     OutlinedTextField(
@@ -156,7 +189,7 @@ fun Cadastro() {
                         ),
                         placeholder = { Text(text = "Insira seu nome completo") },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(600.dp)
                             .background(Blue20, shape = RoundedCornerShape(15.dp)),
                         shape = RoundedCornerShape(15.dp),
                         leadingIcon = {
@@ -181,7 +214,7 @@ fun Cadastro() {
                         ),
                         placeholder = { Text(text = "Insira seu email") },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(600.dp)
                             .background(Blue20, shape = RoundedCornerShape(15.dp)),
                         shape = RoundedCornerShape(15.dp),
                         leadingIcon = {
@@ -207,7 +240,7 @@ fun Cadastro() {
                         ),
                         placeholder = { Text(text = "Insira seu número") },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(600.dp)
                             .background(Blue20, shape = RoundedCornerShape(15.dp)),
                         shape = RoundedCornerShape(15.dp),
                         leadingIcon = {
@@ -233,7 +266,7 @@ fun Cadastro() {
                         ),
                         placeholder = { Text(text = "Digite sua senha") },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(600.dp)
                             .onFocusChanged { focusState ->
                                 clicadoSenha = focusState.isFocused
 
@@ -288,7 +321,7 @@ fun Cadastro() {
                         ),
                         placeholder = { Text(text = "Confirme sua senha") },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(600.dp)
                             .onFocusChanged { focusState ->
                                 clicadoConfirmarSenha = focusState.isFocused
 
@@ -330,47 +363,44 @@ fun Cadastro() {
                         fontFamily = interThin,
                         color = Blue30,
                         text = "Todos os campos são obrigatórios"
-                    ) }
+                    )
+                    Button(
+                            interactionSource = interactionSource,
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(top = 70.dp),
+                    colors = ButtonDefaults.buttonColors(buttonColor, contentColor = textButtonColor),
+                    shape = RoundedCornerShape(400.dp),
+                    onClick = {
+                        if (nomeCadastro.isEmpty() || emailCadastro.isEmpty() || senhaCadastro.isEmpty() || confirmarSenhaCadastro.isEmpty() || numero.isEmpty()) {
+                            showToastCampos = true
+                        } else {
+
+                            if (senhaCadastro == confirmarSenhaCadastro) {
+                                Firebase.auth.createUserWithEmailAndPassword(
+                                    emailCadastro,
+                                    senhaCadastro
+                                )
+                                showToastLogue = true
+                                //TODO navegação
+                                context.startActivity(intentLogin)
+                            } else {
+                                Toast.makeText(context, "Senhas não conferem!", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+
+                        }
+
+                    },
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+
+                    ) {
+                    Text(text = "Cadastrar", fontFamily = quickSand)
+                } }
 
                 // botão de cadastrar
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom, modifier = Modifier.background(Color.White).fillMaxHeight().weight(2f)) {
-                    Button(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .background(Blue10, shape = RoundedCornerShape(50.dp)),
-                        colors = ButtonDefaults.buttonColors(Blue10),
-                        shape = RoundedCornerShape(400.dp),
-                        onClick = {
-                            if (nomeCadastro.isEmpty() || emailCadastro.isEmpty() || senhaCadastro.isEmpty() || confirmarSenhaCadastro.isEmpty() || numero.isEmpty()) {
-                                Toast.makeText(context, "Preencha todos os campos!", Toast.LENGTH_SHORT)
-                                    .show()
-                            } else {
 
-                                if (senhaCadastro == confirmarSenhaCadastro) {
-                                    Firebase.auth.createUserWithEmailAndPassword(
-                                        emailCadastro,
-                                        senhaCadastro
-                                    )
-
-                                    Toast.makeText(
-                                        context,
-                                        "Cadastro finalizado! Logue novamente",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    context.startActivity(intentLogin)
-                                } else {
-                                    Toast.makeText(context, "Senhas não conferem!", Toast.LENGTH_SHORT)
-                                        .show()
-                                }
-
-                            }
-
-                        },
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
-
-                    ) {
-                        Text(text = "Cadastrar", fontFamily = quickSand)
-                    }
                 }
 
             }// fim do alinhador
@@ -395,7 +425,56 @@ fun Cadastro() {
             )
         }
 
+        CustomToast(show = showToastCampos, message = "Preencha todos os campos!", texto = Color.White, icone = Color.White, backgroundColor = RedText, iconVec = Icons.Filled.Lock)
+        LaunchedEffect(key1 = showToastCampos) {
+            if (showToastCampos) {
+                delay(2000)
+                showToastCampos = false
+            }
+        }
+
+        CustomToast(show = showToastLogue, message = "Cadastro Realizado! Logue novamente", texto = Color.White, icone = Color.White, backgroundColor = GreenToast, iconVec = Icons.Filled.Lock)
+        LaunchedEffect(key1 = showToastLogue) {
+            if (showToastLogue) {
+                delay(2000)
+                showToastLogue = false
+            }
+        }
+
 
 
     }// fim do background
 }// fim da função
+
+@Composable
+fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, backgroundColor: Color, iconVec: ImageVector) {
+    AnimatedVisibility(
+        visible = show,
+        enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 500))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(backgroundColor, shape = RoundedCornerShape(25.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = message, color = texto, fontFamily = quickSandBold)
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    imageVector = iconVec,
+                    contentDescription = "Success",
+                    tint = icone,
+                    modifier = Modifier.size(24.dp)
+                )
+
+            }
+        }
+    }
+}

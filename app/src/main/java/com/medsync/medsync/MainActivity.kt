@@ -20,13 +20,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Login
@@ -137,7 +138,6 @@ fun LoginTela() {
     var labelEmail by remember { mutableStateOf("Email") }
     var labelSenha by remember { mutableStateOf("Senha") }
 
-
     var contexto = LocalContext.current
 
     // hover do botão
@@ -164,12 +164,8 @@ fun LoginTela() {
 
 
     //NAVEGACAO
-    val intentCadastro = Intent(
-        contexto,
-        TelaCadastro::class.java
-    )  // Esse é o Sou Novo Aqui. Leva pra a tela de Cadastro
-    val intentMenu =
-        Intent(contexto, TelaMenu::class.java)  // Esse é o Login. Leva pra a tela de Menu
+    val intentCadastro = Intent(contexto, TelaCadastro::class.java)  // Esse é o Sou Novo Aqui. Leva pra a tela de Cadastro
+    val intentMenu = Intent(contexto, TelaMenu::class.java)  // Esse é o Login. Leva pra a tela de Menu
 
 
 // backgrond
@@ -178,6 +174,7 @@ fun LoginTela() {
             .fillMaxWidth()
             .background(Color.White)
     ) {
+
         // colum que da margem em cima
         Column(
             modifier = Modifier
@@ -186,25 +183,27 @@ fun LoginTela() {
                 .background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-        ) {  }
+        ) {  }// fim da margem top
+
 
         //Campos de entrada e Processo de Login
         Column(
             //Centraliza os column
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(2f)
+                .weight(4f)
                 .background(Color.White)
-                .padding(10.dp),
+                .padding(10.dp)
+                .verticalScroll(rememberScrollState(0)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             // tem a imagem, os 2 campos e o esqueci senha
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = null,
-                    modifier = Modifier.padding(bottom = 25.dp)
+                    modifier = Modifier.size(300.dp).clickable { contexto.startActivity(intentMenu) }
                 )
 
                 //Campo para digitar Email
@@ -223,13 +222,15 @@ fun LoginTela() {
                         errorIndicatorColor = Color.Transparent
                     ),
 
-                    placeholder = { Text("Insira seu nome ou email") },
+                    placeholder = { Text("Insira seu email") },
                     trailingIcon = {
                         if (clicadoEmail) {
                             labelEmail = ""
                         }
                     },
                     modifier = Modifier
+                        .width(600.dp)
+                        .padding(top = 50.dp)
                         .onFocusChanged { focusState ->
                             clicadoEmail = focusState.isFocused
                             if (!focusState.isFocused && email.isEmpty()) {
@@ -239,11 +240,10 @@ fun LoginTela() {
                         .onFocusChanged { focusState ->
                             clicadoEmail = focusState.isFocused
                         }
-                        .fillMaxWidth()
                         .background(Blue20, shape = RoundedCornerShape(50.dp)),
                     shape = RoundedCornerShape(22.dp),
                     leadingIcon = {
-                        Icon(imageVector = Icons.Rounded.Person, contentDescription = null, tint = Blue10, modifier = Modifier.size(30.dp))
+                        Icon(imageVector = Icons.Rounded.Person, contentDescription = null, tint = Blue10)
                     }
                 )//Fim textField1 (Email)
 
@@ -284,12 +284,12 @@ fun LoginTela() {
                                 },
                                 contentDescription = "Esconder e Mostrar Senha",
                                 tint = Blue10,
-                                modifier = Modifier.size(30.dp)
                             )
                         }
                     },
 
                     modifier = Modifier
+                        .width(600.dp)
                         .onFocusChanged { focusState ->
                             clicadoSenha = focusState.isFocused
 
@@ -300,18 +300,17 @@ fun LoginTela() {
                         .onFocusChanged { focusState ->
                             clicadoSenha = focusState.isFocused
                         }
-                        .fillMaxWidth()
                         .background(Blue20, shape = RoundedCornerShape(50.dp)),
                     shape = RoundedCornerShape(22.dp),
                     leadingIcon = {
-                        Icon(imageVector = Icons.Rounded.Lock, contentDescription = null, tint = Blue10, modifier = Modifier.size(30.dp))
+                        Icon(imageVector = Icons.Rounded.Lock, contentDescription = null, tint = Blue10)
                     },
                 )// Fim textField2 (Senha)
 
                 // esqueci senha
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .width(600.dp)
                         .background(Color.White)
                         .padding(top = 5.dp),
                     horizontalArrangement = Arrangement.End
@@ -335,16 +334,12 @@ fun LoginTela() {
                                 },
                         )
                 }
-            }
-
-            // o botão de entrar
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom, modifier = Modifier.background(Color.White).fillMaxHeight().weight(2f)) {
                 //Botao de login
                 Button(
                     interactionSource = interactionSource,
                     colors = ButtonDefaults.buttonColors(buttonColor, contentColor = textButtonColor),
                     shape = RoundedCornerShape(40.dp),
-                    modifier = Modifier.width(130.dp),
+                    modifier = Modifier.width(300.dp).padding(top = 70.dp),
                     onClick = {
                         if (email.isEmpty() || senha.isEmpty()) {
                             showToastCampos = true
@@ -367,7 +362,16 @@ fun LoginTela() {
                 ) {
                     Text(text = "Entrar", fontFamily = quickSand)
                 }
+
             }
+
+            /*
+            // o botão de entrar
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom, modifier = Modifier.background(Color.White).fillMaxHeight().weight(2f)) {
+
+            }
+
+             */
         }// fim do colum centralizador
 
 
@@ -376,6 +380,7 @@ fun LoginTela() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
+                .weight(1f)
                 .padding(40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
@@ -389,7 +394,7 @@ fun LoginTela() {
                     .clickable { contexto.startActivity(intentCadastro) })
         }// fim do colum do n tem conta
 
-        CustomToast(show = showToastCampos, message = "Preencha todos os campos!", texto = Blue10, icone = Blue10, backgroundColor = RedText, iconVec = Icons.Filled.Lock)
+        CustomToast(show = showToastCampos, message = "Preencha todos os campos!", texto = Color.White, icone = Color.White, backgroundColor = RedText, iconVec = Icons.Filled.Lock)
         LaunchedEffect(key1 = showToastCampos) {
             if (showToastCampos) {
                 delay(2000)
@@ -397,7 +402,7 @@ fun LoginTela() {
             }
             }
 
-        CustomToast(show = showToastCredenciais, message = "Credenciais Inválidas!", texto = Blue10, icone = Blue10, backgroundColor = RedText, iconVec = Icons.Filled.Password)
+        CustomToast(show = showToastCredenciais, message = "Credenciais Inválidas!", texto = Color.White, icone = Color.White, backgroundColor = RedText, iconVec = Icons.Filled.Password)
         LaunchedEffect(key1 = showToastCredenciais) {
             if (showToastCredenciais) {
                 delay(2000)
@@ -413,7 +418,7 @@ fun LoginTela() {
             }
         }
 
-        CustomToast(show = showToastesqueciSenha, message = "Preencha o campo de email primeiro!", texto = Blue10, icone = Blue10, backgroundColor = RedText, iconVec = Icons.Filled.Mail)
+        CustomToast(show = showToastesqueciSenha, message = "Preencha o campo de email primeiro!", texto = Color.White, icone = Color.White, backgroundColor = RedText, iconVec = Icons.Filled.Mail)
         LaunchedEffect(key1 = showToastesqueciSenha) {
             if (showToastesqueciSenha) {
                 delay(2000)
@@ -429,8 +434,8 @@ fun LoginTela() {
             }
         }
 
-    }
-}
+    }// fim do background
+}// fim da função
 
 @Composable
 fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, backgroundColor: Color, iconVec: ImageVector) {

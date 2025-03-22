@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:allowBackup="true"
@@ -14,11 +16,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MedSync"
         tools:targetApi="31">
-        <activity
-            android:name="com.medsync.medsync.cadastroProdutos.test"
-            android:exported="false"
-            android:label="@string/title_activity_test"
-            android:theme="@style/Theme.MedSync" />
         <activity
             android:name="com.medsync.medsync.whatsapp.whatsapp"
             android:exported="true"
@@ -43,16 +40,6 @@
             android:name="com.medsync.medsync.cadastroProdutos.CadastrarProdutos"
             android:exported="true"
             android:label="@string/title_activity_cadastrar_produtos"
-            android:theme="@style/Theme.MedSync" />
-        <activity
-            android:name="com.medsync.medsync.escqueciSenha.teste"
-            android:exported="true"
-            android:label="@string/title_activity_teste"
-            android:theme="@style/Theme.MedSync" />
-        <activity
-            android:name="com.medsync.medsync.escqueciSenha.esqueciSenhaNumero"
-            android:exported="true"
-            android:label="@string/title_activity_esqueci_senha_numero"
             android:theme="@style/Theme.MedSync" />
         <activity
             android:name="com.medsync.medsync.escqueciSenha.esqueciSenha"

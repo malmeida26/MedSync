@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
@@ -73,7 +74,6 @@ import androidx.compose.ui.unit.sp
 import com.example.medsync.R
 import com.google.firebase.firestore.FirebaseFirestore
 import com.medsync.medsync.TelaMenu
-import com.medsync.medsync.TelaPerfil
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.GreenToast
@@ -97,9 +97,37 @@ class CadastrarProdutos : ComponentActivity() {
         setContent {
             MedSyncTheme {
 
+                // hover do botão
+                val interactionSource = remember { MutableInteractionSource() }
+                val interactionSource2 = remember { MutableInteractionSource() }
+
+                val isPressed by interactionSource.collectIsPressedAsState() //começa com false
+                val isPressed2 by interactionSource2.collectIsPressedAsState() //começa com false
+
+                val iconColor = if(isPressed){
+                    Color.White
+                }else{
+                    Blue10
+                }
+                val iconBackgroundColor = if(isPressed){
+                    Blue10
+                }else{
+                    Blue20
+                }
+
+                val iconColor2 = if(isPressed2){
+                    Color.White
+                }else{
+                    Blue10
+                }
+                val iconBackgroundColor2 = if(isPressed2){
+                    Blue10
+                }else{
+                    Blue20
+                }
+
                 val context = LocalContext.current
                 val intentVoltar = Intent(context, TelaMenu::class.java)
-                val intentPerfil = Intent(context, TelaPerfil::class.java)
 
                 Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
                     TopAppBar(title = {
@@ -117,14 +145,14 @@ class CadastrarProdutos : ComponentActivity() {
                                 Box(
                                     Modifier
                                         .wrapContentSize()
-                                        .background(Blue20, shape = RoundedCornerShape(15.dp)),
+                                        .background(iconBackgroundColor, shape = RoundedCornerShape(15.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    IconButton(onClick = { context.startActivity(intentVoltar) }) {
+                                    IconButton(onClick = { context.startActivity(intentVoltar) }, interactionSource = interactionSource) {
                                         Icon(
                                             imageVector = Icons.Filled.ArrowBackIosNew,
                                             contentDescription = null,
-                                            tint = Blue10,
+                                            tint = iconColor,
                                             modifier = Modifier.size(44.dp)
                                         )
                                     }
@@ -141,18 +169,16 @@ class CadastrarProdutos : ComponentActivity() {
 
                                 Box(
                                     Modifier
-                                        .wrapContentSize()
-                                        .background(Blue20, shape = RoundedCornerShape(15.dp)),
+                                        .wrapContentSize(),
+                                    //.background(Blue20, shape = RoundedCornerShape(15.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    IconButton(onClick = { context.startActivity(intentPerfil) }) {
+                                    IconButton(onClick = {}) {
                                         Icon(
                                             imageVector = Icons.Filled.Home,
                                             contentDescription = null,
-                                            tint = Blue10,
-                                            modifier = Modifier.size(44.dp),
-
-                                            )
+                                            tint = Color.White,
+                                        )
                                     }
                                 }
                             }
@@ -177,8 +203,6 @@ class CadastrarProdutos : ComponentActivity() {
                 }) { innerPadding ->
                     CadastrarProdutos(Modifier.padding(innerPadding))
                 }
-
-
             }// fim do theme
         }
     }
@@ -211,7 +235,8 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
         "antiácidos e laxantes",
         "contraceptivos"
     )
-    var categoria by remember { mutableStateOf(list[0]) }
+    var categoria by remember { mutableStateOf("") }
+
 
     // hover do botão
     val interactionSource = remember { MutableInteractionSource() }
@@ -235,20 +260,38 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
 
 
     // background
-    Column(modifier = Modifier
+    Column(modifier
         .fillMaxSize()
         .background(Color.White)) {
 
-        // cabeçalho
-        Column(modifier = modifier
-            .weight(1f)
-            .background(Color.White)) {}
+//icone / cabeçalho
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                Modifier
+                    .wrapContentSize()
+                    .background(Color.White, shape = RoundedCornerShape(15.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = null,
+                    tint = Blue10,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
+        }// fim do cabelaçlho
 
             // caixa de infos
             Column(
                 modifier = Modifier
                     .padding(10.dp)
-                    .weight(9f)
+                    .weight(5f)
                     .wrapContentSize()
                     .verticalScroll(rememberScrollState(0))
                     .background(
@@ -269,7 +312,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()){
+                        Box(modifier = Modifier.width(200.dp)){
                             Text(
                                 text = "Nome Produto",
                                 fontFamily = interBold,
@@ -306,7 +349,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()) {
+                        Box(modifier = Modifier.width(200.dp)) {
                             Text(
                                 text = "Nome Genérico",
                                 fontFamily = interBold,
@@ -347,7 +390,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()) {
+                        Box(modifier = Modifier.width(200.dp)) {
                             Text(
                                 text = "Categorias",
                                 fontFamily = interBold,
@@ -409,7 +452,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                     )
                                 }
                             }
-                        }
+                        }// fim do dropdown
 
                     }
 // apresnetação
@@ -420,7 +463,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()) {
+                        Box(modifier = Modifier.width(200.dp)) {
                             Text(
                                 text = "Apresentação",
                                 fontFamily = interBold,
@@ -463,7 +506,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()) {
+                        Box(modifier = Modifier.width(200.dp)) {
                             Text(
                                 text = "Data de validade",
                                 fontFamily = interBold,
@@ -541,7 +584,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "Código de barras",
+                            text = "Cadastrar Código de barras",
                             fontFamily = interBold,
                             color = Blue10,
                         )
@@ -618,7 +661,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()) {
+                        Box(modifier = Modifier.width(200.dp)) {
                             Text(
                                 text = "Preço de venda",
                                 fontFamily = interBold,
@@ -664,7 +707,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(modifier = Modifier.wrapContentSize()) {
+                        Box(modifier = Modifier.width(200.dp)) {
                             Text(
                                 text = "Quantidade",
                                 fontFamily = interBold,
@@ -728,7 +771,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                     ) // Ajuste os valores conforme necessário
                                     .padding(0.dp)
                             )
-                        }
+                        }// fim da opção que aumenta e diminui a quantidade
                     }
 
 // botao
@@ -756,7 +799,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                         precoCompra = precoCompra, // O preço de compra do produto (string)
                                         precoVenda = precoVenda, // O preço de venda do produto (string)
                                         categoria = categoria, // A categoria do produto (string)
-                                        qnt = qnt, // O preço de venda do produto (int)
+                                        qnt = qnt,
                                     )
                                     showToast = true
 
@@ -767,11 +810,12 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                     precoCompra = ""
                                     precoVenda = ""
                                     qnt = 0
+                                    categoria = "Selecione"
 
                                 }
                             }
                         ) {
-                            Text("Concluir Cadastro", fontFamily = quickSand, fontSize = 24.sp)
+                            Text("Cadastrar", fontFamily = quickSand, fontSize = 24.sp)
                         }
 
 
@@ -853,6 +897,7 @@ fun produtoDB(
 
     // Criar um mapa com os dados do produto
     val produto = hashMapOf(
+        "nomeProduto" to nome,
         "nomeGenerico" to nomeGenerico,
         "apresentacao" to apresentacao,
         "dataValidade" to dataValidade,
@@ -864,6 +909,6 @@ fun produtoDB(
 
     // Adicionar um novo documento com um ID gerado automaticamente
     db.collection("produtos")
-        .document(nome)
-        .set(produto)
+        .document(nome) // Especifica o ID do documento
+        .set(produto) // Define os dados do documento
 }
