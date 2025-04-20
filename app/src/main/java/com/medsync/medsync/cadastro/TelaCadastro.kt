@@ -30,7 +30,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -38,6 +40,7 @@ import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.ShoppingBasket
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -85,32 +88,34 @@ class TelaCadastro : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Cadastro()
+            Cadastro(viewModel = usuarioViewModel())
 
         }
     }
 }
 
-//  TODO IMPLENTAR CADASTRO COM NUMERO DE TELEFONE
+// TODO QUANDO VIRA A TELA, TUDO SOME
 
 @Composable
-fun Cadastro() {
+fun Cadastro(viewModel: usuarioViewModel ) {
 //    VARIAVEIS CADASTRO
     var nomeCadastro by remember { mutableStateOf("") }
     var emailCadastro by remember { mutableStateOf("") }
     var senhaCadastro by remember { mutableStateOf("") }
     var confirmarSenhaCadastro: String by remember { mutableStateOf("") }
     var numero by remember { mutableStateOf("") }
+    var nomeDrogaria by remember { mutableStateOf("")}
+    var tipoUsuarioSelecionado by remember { mutableStateOf("") }
 
     // hover do botão
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+
     val buttonColor = if(isPressed){
         Blue20
     }else{
         Blue10
     }
-
     val textButtonColor = if(isPressed){
         Blue10
     }else{
@@ -152,6 +157,7 @@ fun Cadastro() {
                 .fillMaxSize()
                 .weight(6f)
                 .background(color = Color.White)
+                .verticalScroll(enabled = true, state = rememberScrollState(0))
         ) {
 
 // colum alinhador
@@ -162,8 +168,6 @@ fun Cadastro() {
                     .padding(10.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
-
-
             ) {
                 // logo, formualrios e texto
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -194,6 +198,31 @@ fun Cadastro() {
                         shape = RoundedCornerShape(15.dp),
                         leadingIcon = {
                             Icon( imageVector = Icons.Rounded.Person, contentDescription = null, tint = Blue10, modifier = Modifier.size(30.dp) )
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(15.dp))
+                    //                Nome drogaria
+                    OutlinedTextField(
+                        value = nomeDrogaria,
+                        onValueChange = { nomeDrogaria = it },
+                        maxLines = 1,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent
+                        ),
+                        placeholder = { Text(text = "Insira o nome de seu estabelecimento") },
+                        modifier = Modifier
+                            .width(600.dp)
+                            .background(Blue20, shape = RoundedCornerShape(15.dp)),
+                        shape = RoundedCornerShape(15.dp),
+                        leadingIcon = {
+                            Icon( imageVector = Icons.Rounded.ShoppingBasket, contentDescription = null, tint = Blue10, modifier = Modifier.size(30.dp) )
                         }
                     )
                     Spacer(modifier = Modifier.height(15.dp))
@@ -340,10 +369,10 @@ fun Cadastro() {
                         },
                         trailingIcon = {
                             IconButton(
-                                onClick = { clicadoSenha = !clicadoSenha }
+                                onClick = { clicadoConfirmarSenha = !clicadoConfirmarSenha }
                             ) {
                                 Icon(
-                                    imageVector = if (clicadoSenha) {
+                                    imageVector = if (clicadoConfirmarSenha) {
                                         Icons.Rounded.Visibility
                                     } else {
                                         Icons.Rounded.VisibilityOff
@@ -377,10 +406,18 @@ fun Cadastro() {
                         } else {
 
                             if (senhaCadastro == confirmarSenhaCadastro) {
-                                Firebase.auth.createUserWithEmailAndPassword(
-                                    emailCadastro,
-                                    senhaCadastro
+
+                                viewModel.cadastrarUsuario(
+                                    nome = nomeCadastro,
+                                    email = emailCadastro,
+                                    senha = senhaCadastro,
+                                    numero = numero,
+                                    tipo = tipoUsuarioSelecionado, // "administrador" ou "funcionario"
+                                    nomeEstabelecimento = nomeDrogaria,
+                                    onSuccess = { /* feedback ou navegação */ },
+                                    onFailure = { e -> /* mostrar erro */ }
                                 )
+
                                 showToastLogue = true
                                 //TODO navegação
                                 context.startActivity(intentLogin)
@@ -396,9 +433,25 @@ fun Cadastro() {
 
                     ) {
                     Text(text = "Cadastrar", fontFamily = quickSand)
-                } }
+                }
 
-                // botão de cadastrar
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround){
+                        BotaoTipoUsuario(
+                            texto = "Administrador",
+                            selecionado = tipoUsuarioSelecionado == "administrador",
+                            onClick = { tipoUsuarioSelecionado = "administrador" }
+                        )
+
+                        BotaoTipoUsuario(
+                            texto = "Funcionário",
+                            selecionado = tipoUsuarioSelecionado == "funcionario",
+                            onClick = { tipoUsuarioSelecionado = "funcionario" }
+                        )
+                    }
+
+                }
+
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom, modifier = Modifier.background(Color.White).fillMaxHeight().weight(2f)) {
 
                 }
@@ -476,5 +529,175 @@ fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, back
 
             }
         }
+    }
+}// fim da função
+
+/*
+fun cadastrarEstabelecimento(
+    nomeEstabelecimento: String,
+    adminUid: String,
+    nomeAdmin: String,
+    email: String,
+    numero: String,
+    tipo: String = "administrador"
+) {
+    val db = FirebaseFirestore.getInstance()
+    val estabelecimentoRef = db.collection("estabelecimentos").document()
+
+    val dadosEstabelecimento = mapOf(
+        "nome" to nomeEstabelecimento,
+        "adminUid" to adminUid
+    )
+
+    val dadosUsuario = mapOf(
+        "nome" to nomeAdmin,
+        "email" to email,
+        "numero" to numero,
+        "tipo" to tipo
+    )
+
+    estabelecimentoRef.set(dadosEstabelecimento)
+        .addOnSuccessListener {
+            // Cria o administrador na subcoleção "usuarios" do estabelecimento
+            estabelecimentoRef.collection("usuarios")
+                .document(adminUid)
+                .set(dadosUsuario)
+                .addOnSuccessListener {
+                    Log.d("Firestore", "Estabelecimento e admin cadastrados com sucesso!")
+                }
+                .addOnFailureListener {
+                    Log.e("Firestore", "Erro ao salvar admin", it)
+                }
+        }
+        .addOnFailureListener {
+            Log.e("Firestore", "Erro ao cadastrar estabelecimento", it)
+        }
+}
+
+fun cadastrarFuncionario(
+    nome: String,
+    email: String,
+    numero: String,
+    uidFuncionario: String,
+    uidAdmin: String
+) {
+    val db = FirebaseFirestore.getInstance()
+
+    // Primeiro busca o estabelecimento do admin
+    db.collection("estabelecimentos")
+        .whereEqualTo("adminUid", uidAdmin)
+        .get()
+        .addOnSuccessListener { documents ->
+            if (!documents.isEmpty) {
+                val estabelecimentoId = documents.first().id
+
+                val dadosFuncionario = mapOf(
+                    "nome" to nome,
+                    "email" to email,
+                    "numero" to numero,
+                    "tipo" to "funcionario"
+                )
+
+                db.collection("estabelecimentos")
+                    .document(estabelecimentoId)
+                    .collection("usuarios")
+                    .document(uidFuncionario)
+                    .set(dadosFuncionario)
+                    .addOnSuccessListener {
+                        Log.d("Firestore", "Funcionário cadastrado com sucesso!")
+                    }
+                    .addOnFailureListener {
+                        Log.e("Firestore", "Erro ao cadastrar funcionário", it)
+                    }
+
+            } else {
+                Log.e("Firestore", "Estabelecimento do admin não encontrado")
+            }
+        }
+        .addOnFailureListener {
+            Log.e("Firestore", "Erro ao buscar estabelecimento", it)
+        }
+}
+
+
+
+fun cadastrarEstabelecimento(
+    nomeDrogaria: String,
+    email: String,
+    onSuccess: (String) -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    val dadosEstabelecimento = hashMapOf(
+        "nome" to nomeDrogaria,
+        "email" to email,
+        "dataCadastro" to FieldValue.serverTimestamp()
+    )
+
+    db.collection("estabelecimentos")
+        .add(dadosEstabelecimento)
+        .addOnSuccessListener { documentRef ->
+            val estabelecimentoId = documentRef.id
+            onSuccess(estabelecimentoId)
+        }
+        .addOnFailureListener { exception ->
+            onFailure(exception)
+        }
+}
+
+fun cadastrarUsuario(
+    nomeCadastro: String,
+    emailCadastro: String,
+    numero: String,
+    senhaCadastro: String,
+    tipo: String, // "admin" ou "funcionario"
+    estabelecimentoId: String,
+) {
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+
+    // Criar o usuário no Authentication
+    auth.createUserWithEmailAndPassword(emailCadastro, senhaCadastro)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+
+                val usuario = hashMapOf(
+                    "nome" to nomeCadastro,
+                    "email" to emailCadastro,
+                    "numero" to numero,
+                    "tipo" to  tipo, // Adiciona o campo que define se é admin ou funcionário
+                   "estabelecimentoId" to estabelecimentoId
+                )
+
+                // Salvar dados no Firestore usando o UID como ID do documento
+                db.collection("usuarios")
+                    .add(usuario)
+
+
+
+            }
+        }
+}
+
+ */
+
+@Composable
+fun BotaoTipoUsuario(
+    texto: String,
+    selecionado: Boolean,
+    onClick: () -> Unit
+) {
+
+    val backgroundColor = if (selecionado) Blue10 else Color.LightGray
+    val textColor = if (selecionado) Color.White else Color.Black
+
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(400.dp),
+        modifier = Modifier.width(200.dp),
+    ) {
+        Text(text = texto, color = textColor, fontFamily = quickSand)
     }
 }

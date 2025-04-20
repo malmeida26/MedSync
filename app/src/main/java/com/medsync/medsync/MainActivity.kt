@@ -67,6 +67,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.medsync.medsync.cadastro.TelaCadastro
 import com.medsync.medsync.escqueciSenha.esqueciSenha
+import com.medsync.medsync.menu.TelaMenu
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.Blue30

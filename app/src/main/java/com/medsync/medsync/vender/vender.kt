@@ -11,19 +11,31 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +46,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,10 +60,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.medsync.medsync.TelaMenu
+import com.medsync.medsync.menu.TelaMenu
+import com.medsync.medsync.estoque.Produto
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.MedSyncTheme
+import com.medsync.medsync.ui.theme.ui.theme.interBold
+import com.medsync.medsync.ui.theme.ui.theme.interMedium
 import com.medsync.medsync.ui.theme.ui.theme.quickSandBold
 import com.medsync.medsync.ui.theme.ui.theme.robotoCondensed
 
@@ -169,7 +185,7 @@ class vender : ComponentActivity() {
                     )
 
                 }) { innerPadding ->
-                    vender(Modifier.padding(innerPadding))
+                    vender(Modifier.padding(innerPadding), viewModel = venderViewModel())
                 }
             }// fim do theme
         }
@@ -177,15 +193,39 @@ class vender : ComponentActivity() {
 }
 
 @Composable
-fun vender(modifier: Modifier = Modifier) {
+fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
 
     // dados de entrada
-    var pesquisaTxt by remember { mutableStateOf("") }
+    val pesquisaTexto by viewModel.pesquisaTexto.collectAsState()
+    val produtosFiltrados by viewModel.produtosFiltrados.collectAsState()
+    val quantidade by viewModel.quantidade.collectAsState()
+    var produtoSelecionado by remember { mutableStateOf<Produto?>(null) }
+    var qntSelecionada by remember { mutableStateOf(0) }
+
 
     // cosmeticos
     val fundoCampo = Blue20
     val fonte = robotoCondensed
     val corFonte = Blue10
+    val backCard = Color.White
+    val textColor = Blue10
+    val textFont = interBold
+    val textFont2 = interMedium
+    val textPreco = Color.Red
+
+    // hover do botão
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val buttonColor = if (isPressed) {
+        Blue20
+    } else {
+        Blue10
+    }
+    val textButtonColor = if (isPressed) {
+        Blue10
+    } else {
+        Color.White
+    }
 
     // background
     Column(modifier.background(Color.White).fillMaxSize())
@@ -223,8 +263,8 @@ fun vender(modifier: Modifier = Modifier) {
                 Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.Center)
                 {
                     OutlinedTextField(
-                        value = pesquisaTxt,
-                        onValueChange = { /*TODO fazer a pesquisa */ pesquisaTxt = it },
+                        value = pesquisaTexto,
+                        onValueChange = { viewModel.atualizarPesquisa(it) },
                         maxLines = 1,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.White,
@@ -249,15 +289,163 @@ fun vender(modifier: Modifier = Modifier) {
 
                 }// fim campo de pesquisa
 
+
+                var produtoSelecionado by remember { mutableStateOf<Produto?>(null) }
+                var qntSelecionada by remember { mutableStateOf(0) }
+               Column(){
+
+
+                   LazyColumn(contentPadding = PaddingValues(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                       items(produtosFiltrados) {
+                               produto ->
+                           val qnt = remember { mutableStateOf(0) }
+                           Card(
+                               shape = RoundedCornerShape(10.dp),
+                               colors = CardDefaults.cardColors(containerColor = backCard),
+                               modifier = Modifier.fillMaxWidth()
+                           ){
+                               Column() {
+                                   Row(
+                                       modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 5.dp, top = 10.dp, bottom = 5.dp),
+                                       horizontalArrangement = Arrangement.SpaceBetween
+                                   ){
+                                       Row(){
+                                           Box(modifier = Modifier.width(210.dp)){Text(text = "Nome Comercial: ", color = textColor, fontFamily = textFont)}
+                                           Text(text = produto.nomeProduto, color = textColor, fontFamily = textFont2)
+                                       }// box dos nomes
+                                   }// fim do box nome comercial e preço
+
+                                   Spacer(modifier = Modifier.width(5.dp))
+
+                                   Row(modifier = Modifier.padding(start = 10.dp)){
+                                       Box(modifier = Modifier.width(210.dp)){Text(text = "Nome Genérico: ", color = textColor, fontFamily = textFont)}
+                                       Text(text = produto.nomeGenerico, color = textColor, fontFamily = textFont2)
+                                   }// box dos generico
+
+                                   Spacer(modifier = Modifier.width(5.dp))
+
+                                   Row(modifier = Modifier.padding(start = 10.dp)){
+                                       Box(modifier = Modifier.width(210.dp)){Text(text = "Apresentação: ", color = textColor, fontFamily = textFont)}
+                                       Text(text = produto.apresentacao, color = textColor, fontFamily = textFont2)
+                                   }// box dos apresentacao
+
+                                   Spacer(modifier = Modifier.width(5.dp))
+
+                                   Row(
+                                       modifier = Modifier.fillMaxWidth().padding(start = 10.dp),
+                                       horizontalArrangement = Arrangement.SpaceBetween
+                                   ){
+                                       Row(){
+                                           Box(modifier = Modifier.width(210.dp)){Text(text = "Preço: ", color = textPreco, fontFamily = textFont)}
+                                           Text(text = "R$${produto.precoVenda}", color = textColor, fontFamily = textFont2)
+                                       }// box do preço
+                                       Row(){
+                                           OutlinedTextField(
+                                               value = qnt.value.toString(),
+                                               onValueChange = { },
+                                               readOnly = true,
+                                               textStyle = TextStyle(color = Blue10),
+                                               placeholder = {  },
+                                               shape = RoundedCornerShape(10.dp),
+                                               colors = TextFieldDefaults.colors(
+                                                   focusedContainerColor = Color.Transparent,
+                                                   unfocusedContainerColor = Color.Transparent,
+                                                   disabledContainerColor = Color.Transparent,
+                                                   errorContainerColor = Color.Transparent,
+                                                   focusedIndicatorColor = Color.Transparent,
+                                                   unfocusedIndicatorColor = Color.Transparent,
+                                                   disabledIndicatorColor = Color.Transparent,
+                                                   errorIndicatorColor = Color.Transparent,
+                                                   focusedTextColor = Blue10,
+                                                   unfocusedTextColor = Blue10,
+                                                   disabledTextColor = Blue10,
+                                                   errorTextColor = Blue10,
+                                               ),
+                                               leadingIcon = {
+                                                   IconButton(onClick = {
+                                                       if (qnt.value > 0) {
+                                                           qnt.value--
+                                                           produtoSelecionado = produto // Atualiza qual produto será afetado
+                                                           qntSelecionada = qnt.value // Atualiza a quantidade escolhida
+                                                       }
+                                                   }) {
+                                                       Icon(
+                                                           imageVector = Icons.Filled.Remove,
+                                                           contentDescription = "Subtrair",
+                                                           tint = Blue10,
+
+                                                       )
+                                                   }
+                                               },
+                                               trailingIcon = {
+                                                   IconButton(onClick = {
+                                                       qnt.value++
+                                                       produtoSelecionado = produto // Atualiza o produto selecionado
+                                                       qntSelecionada = qnt.value
+                                                   }) {
+                                                       Icon(
+                                                           imageVector = Icons.Filled.Add,
+                                                           contentDescription = "Somar",
+                                                           tint = Blue10,
+
+                                                       )
+                                                   }
+                                               },
+                                               modifier = Modifier
+                                                       .background(Color.White, shape = RoundedCornerShape(10.dp))
+                                               .widthIn(
+                                                   min = 80.dp,
+                                                   max = 150.dp
+                                               ) // Ajuste os valores conforme necessário3
+                                               .padding(0.dp)
+                                           )
+                                       }
+                                   }// fim do box nome comercial e preço
+                               }// estrutura o card
+                           }// fim do card
+
+
+
+                       }// fim do items
+                   }// fim do lazycolumn
+                   if (pesquisaTexto.isNotBlank()) {
+                       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,){
+                           Button(
+                               onClick = {
+                                   produtoSelecionado?.let { produto ->  // Só executa se não for nulo
+                                       viewModel.atualizarQuantidade(produto, qntSelecionada)
+                                       qntSelecionada = 0 // Resetar quantidade após atualização
+                                   }
+                               },
+                               interactionSource = interactionSource,
+                               colors = ButtonDefaults.buttonColors(buttonColor, contentColor = textButtonColor),
+                               shape = RoundedCornerShape(15.dp),
+                               modifier = Modifier
+                                   .wrapContentWidth()
+                                   .padding(10.dp),
+                           ) {
+                               Text("Adicionar", fontFamily = textFont2, color = textButtonColor)
+                           }
+                       }
+                   }
+
+               }
+
+
+
+
+               }
+
+            
+
             }// fim do card
 
-        }// fim campo de venda
-
-        // cabeçalho
-        Column(modifier = Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center){
-        }// fim do cabeçalho
+        Column(modifier = Modifier.fillMaxWidth().weight(1f).background(color = Color.White)){}
+        }// fim do background
 
 
-    }// fim do column de background
 
-}// fim da função
+
+
+
+    }// fim da função

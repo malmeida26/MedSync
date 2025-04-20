@@ -56,6 +56,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,8 +73,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medsync.R
-import com.google.firebase.firestore.FirebaseFirestore
-import com.medsync.medsync.TelaMenu
+import com.medsync.medsync.menu.TelaMenu
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.GreenToast
@@ -201,7 +201,7 @@ class CadastrarProdutos : ComponentActivity() {
                     )
 
                 }) { innerPadding ->
-                    CadastrarProdutos(Modifier.padding(innerPadding))
+                    CadastrarProdutos(Modifier.padding(innerPadding), viewModel = produtosViewModel() )
                 }
             }// fim do theme
         }
@@ -210,7 +210,7 @@ class CadastrarProdutos : ComponentActivity() {
 
 @ExperimentalMaterial3Api
 @Composable
-fun CadastrarProdutos(modifier: Modifier = Modifier) {
+fun CadastrarProdutos(modifier: Modifier = Modifier, viewModel: produtosViewModel) {
 
 
     // dados
@@ -222,6 +222,17 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
     var precoVenda by remember { mutableStateOf("") }
     var qnt by remember { mutableIntStateOf(0) }
 
+
+    LaunchedEffect(Unit) {
+        viewModel.carregarEstabelecimentoDoUsuarioLogado()
+    }
+    val estabelecimentoId by viewModel.estabelecimentoId.collectAsState()
+
+
+
+
+
+    // data
     var openDatePicker by remember { mutableStateOf(false) }
     var isExpandend by remember { mutableStateOf(false) }
 
@@ -257,6 +268,8 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
     var showToastErro by remember { mutableStateOf(false) }
 
     var context = LocalContext.current
+
+
 
 
     // background
@@ -791,7 +804,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                 if (nomeProduto.isEmpty() || nomeGenerico.isEmpty() || apresentacao.isEmpty() || date.isEmpty() || precoCompra.isEmpty() || precoVenda.isEmpty() || qnt == 0) {
                                     showToastErro = true
                                 } else {
-                                    produtoDB(
+                                    viewModel.produtoDB(
                                         nome = nomeProduto, // O nome do produto (string)
                                         nomeGenerico = nomeGenerico, // O nome genérico do produto (string)
                                         apresentacao = apresentacao, // A apresentação do produto (string)
@@ -799,6 +812,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                         precoCompra = precoCompra, // O preço de compra do produto (string)
                                         precoVenda = precoVenda, // O preço de venda do produto (string)
                                         categoria = categoria, // A categoria do produto (string)
+                                        estabelecimentoId = estabelecimentoId!!,
                                         qnt = qnt,
                                     )
                                     showToast = true
@@ -810,7 +824,7 @@ fun CadastrarProdutos(modifier: Modifier = Modifier) {
                                     precoCompra = ""
                                     precoVenda = ""
                                     qnt = 0
-                                    categoria = "Selecione"
+                                    categoria = ""
 
                                 }
                             }
@@ -882,33 +896,3 @@ fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, back
 }
 
 
-fun produtoDB(
-    nome: String,
-    nomeGenerico: String,
-    apresentacao: String,
-    dataValidade: String,
-    precoCompra: String,
-    precoVenda: String,
-    categoria: String,
-    qnt: Int
-) {
-    // Obter uma instância do Firestore
-    val db = FirebaseFirestore.getInstance()
-
-    // Criar um mapa com os dados do produto
-    val produto = hashMapOf(
-        "nomeProduto" to nome,
-        "nomeGenerico" to nomeGenerico,
-        "apresentacao" to apresentacao,
-        "dataValidade" to dataValidade,
-        "precoCompra" to precoCompra,
-        "precoVenda" to precoVenda,
-        "qnt" to qnt,
-        "categoria" to categoria
-    )
-
-    // Adicionar um novo documento com um ID gerado automaticamente
-    db.collection("produtos")
-        .document(nome) // Especifica o ID do documento
-        .set(produto) // Define os dados do documento
-}

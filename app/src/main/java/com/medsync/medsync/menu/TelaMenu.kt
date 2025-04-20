@@ -1,10 +1,14 @@
-package com.medsync.medsync
+package com.medsync.medsync.menu
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,6 +28,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.Archive
@@ -39,6 +44,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,9 +55,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.medsync.medsync.MainActivity
+import com.medsync.medsync.TelaPerfil
 import com.medsync.medsync.cadastroProdutos.CadastrarProdutos
 import com.medsync.medsync.desempenho.desempenho
 import com.medsync.medsync.estoque.estoque
@@ -60,6 +70,7 @@ import com.medsync.medsync.ui.theme.ui.theme.MedSyncTheme
 import com.medsync.medsync.ui.theme.ui.theme.quickSandBold
 import com.medsync.medsync.vender.vender
 import com.medsync.medsync.whatsapp.whatsapp
+import kotlinx.coroutines.delay
 
 
 class TelaMenu : ComponentActivity() {
@@ -173,7 +184,7 @@ class TelaMenu : ComponentActivity() {
                          )
 
                 }) { innerPadding ->
-                    Menu(Modifier.padding(innerPadding))
+                    Menu(Modifier.padding(innerPadding), viewModel = menuViewModel())
                 }
 
 
@@ -184,7 +195,14 @@ class TelaMenu : ComponentActivity() {
 
 @ExperimentalMaterial3Api
 @Composable
-fun Menu(modifier: Modifier = Modifier) {
+fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
+
+    //permissão
+    val tipoUsuario by viewModel.tipoUsuario.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.buscarTipoUsuario()
+    }
+
 
     // cores dos box
     var boxColor by remember { mutableStateOf(Blue20) }
@@ -219,6 +237,10 @@ fun Menu(modifier: Modifier = Modifier) {
 
     // FONTES
     val menus = quickSandBold
+
+    //toast
+    var showToastSemAcesso by remember { mutableStateOf(false) }
+
 
     // background
     Column(modifier = Modifier
@@ -341,39 +363,53 @@ fun Menu(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.padding(10.dp))
             // Desempenho
-            Box(Modifier
-                .fillMaxWidth()
-                .background(boxColor4, shape = RoundedCornerShape(25.dp))
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = { offset ->
-                            boxColor4 = Blue10
-                            textColor4 = Color.White
-                            iconColor4 = Color.White
-                            try {
-                                awaitRelease()
-                            } finally {
-                                boxColor4 = Blue20 // Cor padrão
-                                textColor4 = Blue10
-                                iconColor4 = Blue10
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(boxColor4, shape = RoundedCornerShape(25.dp))
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                if (tipoUsuario == "administrador") {
+                                    boxColor4 = Blue10
+                                    textColor4 = Color.White
+                                    iconColor4 = Color.White
+                                    try {
+                                        awaitRelease()
+                                    } finally {
+                                        boxColor4 = Blue20
+                                        textColor4 = Blue10
+                                        iconColor4 = Blue10
+                                    }
+                                }
+                            },
+                            onTap = {
+                                if (tipoUsuario == "administrador") {
+                                    context.startActivity(intentDesempenho)
+                                } else {
+                                    showToastSemAcesso = true
+                                }
                             }
-                        },
-                        onTap = {
-                            context.startActivity(intentDesempenho)
-                        }
-                    )
-                }, contentAlignment = Alignment.Center)
-            {
-                // vai alinhar os itens dentro do box
-                Row(modifier = Modifier
-                    .padding(10.dp)
-                    .height(50.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween)
-                {
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .height(50.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(text = "Desempenho", fontFamily = menus, color = textColor4)
                     Spacer(modifier = Modifier.width(5.dp))
-                    Icon(imageVector = Icons.Rounded.AutoGraph, contentDescription = null, tint = iconColor4)
-                }// fim do row de alinhamento
-            }// fim box
+                    Icon(
+                        imageVector = Icons.Rounded.AutoGraph,
+                        contentDescription = null,
+                        tint = iconColor4
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.padding(10.dp))
             // whats
@@ -413,18 +449,59 @@ fun Menu(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.padding(10.dp))
 
-
-
-
-
-
-
         }// fim do colum opções
+        CustomToast(
+            show = showToastSemAcesso,
+            message = "Sem permissão!",
+            texto = Color.White,
+            icone = Color.White,
+            backgroundColor = Color.Red,
+            iconVec = Icons.Filled.Error
+        )
+        LaunchedEffect(key1 = showToastSemAcesso) {
+            if (showToastSemAcesso) {
+                delay(2000)
+                showToastSemAcesso = false
+            }
+        }
 
     }
 
 
 
+}
+
+@Composable
+fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, backgroundColor: Color, iconVec: ImageVector) {
+    AnimatedVisibility(
+        visible = show,
+        enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 500))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(backgroundColor, shape = RoundedCornerShape(25.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = message, color = texto, fontFamily = quickSandBold)
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    imageVector = iconVec,
+                    contentDescription = "Success",
+                    tint = icone,
+                    modifier = Modifier.size(24.dp)
+                )
+
+            }
+        }
+    }
 }
 
 

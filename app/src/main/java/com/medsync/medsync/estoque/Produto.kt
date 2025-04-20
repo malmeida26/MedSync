@@ -10,6 +10,7 @@ data class Produto(
     val categoria: String = "",
     val precoCompra: String = "",
     val dataValidade: String = "",
+    val estabelecimentoId: String = "",
 )
 
 

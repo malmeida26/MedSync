@@ -5,6 +5,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,9 +33,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
@@ -51,22 +61,25 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.medsync.medsync.TelaMenu
+import androidx.compose.ui.window.Dialog
+import com.medsync.medsync.menu.TelaMenu
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.MedSyncTheme
@@ -74,6 +87,7 @@ import com.medsync.medsync.ui.theme.ui.theme.interBold
 import com.medsync.medsync.ui.theme.ui.theme.interMedium
 import com.medsync.medsync.ui.theme.ui.theme.quickSandBold
 import com.medsync.medsync.ui.theme.ui.theme.robotoCondensed
+import kotlinx.coroutines.delay
 
 @ExperimentalMaterial3Api
 class estoque : ComponentActivity() {
@@ -201,18 +215,49 @@ class estoque : ComponentActivity() {
 @Composable
 fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
 
-    // controle de pesquisa
-    val pesquisa by remember { mutableStateOf("") }
-    val produtos by viewModel.produtoList.collectAsStateWithLifecycle()
-    val listaProdutos by viewModel.listaProdutos
-    val pesquisaTexto by viewModel.pesquisaTexto
-    val produto by viewModel.produto
+    //permissão
+    val tipoUsuario by viewModel.tipoUsuario.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.buscarTipoUsuario()
+    }
 
+
+
+    //iniciar funçoes
+
+    LaunchedEffect(Unit) {
+        viewModel.obterEstabelecimentoDoUsuarioAtual() // Chama diretamente sem necessidade de callback
+    }
+
+    val estabelecimentoId by viewModel.estabelecimentoId.collectAsState()
+
+    // Assim que o estabelecimentoId for atualizado, você pode carregar os produtos
+    if (estabelecimentoId.isNotEmpty()) {
+        // Carregar os produtos ou fazer outra ação
+       // viewModel.carregarProdutosDoEstabelecimento(estabelecimentoId)
+        viewModel.carregarProdutos(estabelecimentoId)
+    } else {
+        Text("Estabelecimento nao encontrado")
+    }
+
+
+
+   
+
+
+    // gerenciemnto de pesquisa
+    val pesquisaTexto by viewModel.pesquisaTexto.collectAsState()
+    val produtosFiltrados by viewModel.produtosFiltrados.collectAsState()
+    val categoriaFiltro by viewModel.categoriaFiltro.collectAsState()
+
+    var produtoSelecionado by remember { mutableStateOf<Produto?>(null) }
 
 
     //    categorias
+    var categoria by remember { mutableStateOf(categoriaFiltro) }
     var isExpandend by remember { mutableStateOf(false) }
     val list = listOf(
+        "limpar filtro",
         "analgésicos e antitérmicos",
         "antiflamatórios e antibióticos",
         "antifúngicos e antivirais",
@@ -221,14 +266,37 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
         "antiácidos e laxantes",
         "contraceptivos"
     )
-    var categoria by remember { mutableStateOf(list[0]) }
+
+    // hover do botão
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val buttonColor1 = if(isPressed){
+        Blue20
+    }else{
+        Blue10
+    }
+
+    val textButtonColor = if(isPressed){
+        Blue10
+    }else{
+        Color.White
+    }
 
     // cores e fontes
     val backCard = Blue20
     val textColor = Blue10
+    val textColor2 = Blue20
     val buttonColor = Blue10
     val textFont = interBold
     val textFont2 = interMedium
+
+    // toasts
+    var showToastSucesso by remember { mutableStateOf(false) }
+    var showToastErro by remember { mutableStateOf(false) }
+    var showToastSemAcesso by remember { mutableStateOf(false) }
+
+    var contexto = LocalContext.current
+    val intentEditar = Intent(contexto, editar::class.java)
 
     // background
     Column(modifier.fillMaxSize().background(Color.White))
@@ -259,18 +327,20 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
             //pesquisa -> por algum motivo atua como background
             Column(modifier = Modifier.background(Color.White).weight(4f))
             {
+                /*
                 LaunchedEffect(Unit) {
                     viewModel.buscarTodosProdutos()
                 }
+
+                 */
 
                 // row de opções
                 Row(modifier.fillMaxWidth().background(Color.White).padding(10.dp))
                 {
                     OutlinedTextField(
                         value = pesquisaTexto,
-                        onValueChange = { novoTexto ->
-                            viewModel.pesquisaTexto.value = novoTexto // Atualiza o texto digitado
-                        },
+                        onValueChange = {  novoTexto ->
+                            viewModel.atualizarTextoPesquisa(novoTexto) },
                         maxLines = 1,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
@@ -293,10 +363,6 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                         }
                     )//Fim textField1 (Pesquisa)
 
-                    LaunchedEffect(pesquisaTexto) {
-                        viewModel.buscarProdutoPorId(pesquisaTexto) // Chama a busca a cada alteração
-                    }
-
                     Spacer(modifier.width(5.dp))
 
                     // menu dropdown
@@ -310,7 +376,7 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                                 .menuAnchor()
                                 .background(Blue20, shape = RoundedCornerShape(10.dp)),
                             value = categoria,
-                            onValueChange = {},
+                            onValueChange = { },
                             readOnly = true,
                             textStyle = TextStyle(color = Blue10),
                             placeholder = { Text("Filtrar", fontFamily = robotoCondensed) },
@@ -347,8 +413,14 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                                         )
                                     },
                                     onClick = {
-                                        categoria = list[index]
                                         isExpandend = false
+                                        if (index == 0) {
+                                            categoria = ""
+                                            viewModel.atualizarCategoriaFiltro("") // limpa o filtro
+                                        } else {
+                                            categoria = list[index]
+                                            viewModel.atualizarCategoriaFiltro(categoria)
+                                        }
                                     },
                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                                 )
@@ -363,21 +435,27 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                     modifier = Modifier.weight(3f),
                 )
                 {
-
-
-
                         LazyColumn(contentPadding = PaddingValues(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            items(produtos) { produto ->
+                            items(produtosFiltrados) { produto ->
                                 Card(
                                     shape = RoundedCornerShape(10.dp),
                                     colors = CardDefaults.cardColors(containerColor = backCard),
-                                    modifier = Modifier.fillMaxWidth().drawBehind {
+                                    modifier = Modifier.fillMaxWidth()
+                                        .drawBehind {
                                         val borderSize = 3.dp.toPx()
+                                        // Borda superior
                                         drawLine(
-                                            color = Blue10,
-                                            start = Offset(0f, size.height),
-                                            end = Offset(size.width, size.height),
-                                            strokeWidth = borderSize
+                                            color = Blue10, // Cor da borda
+                                            start = Offset(0f, 0f), // Início no topo esquerdo
+                                            end = Offset(size.width, 0f), // Fim no topo direito
+                                            strokeWidth = borderSize // Espessura da borda
+                                        )
+                                        // Borda inferior
+                                        drawLine(
+                                            color = Blue10, // Cor da borda
+                                            start = Offset(0f, size.height), // Início na parte inferior esquerda
+                                            end = Offset(size.width, size.height), // Fim na parte inferior direita
+                                            strokeWidth = borderSize // Espessura da borda
                                         )
                                     }
                                 ){
@@ -387,26 +465,26 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ){
                                             Row(){
-                                                Text(text = "Nome Comercial: ", color = textColor, fontFamily = textFont)
+                                                Box(modifier = Modifier.width(210.dp)){Text(text = "Nome Comercial: ", color = textColor, fontFamily = textFont)}
                                                 Text(text = produto.nomeProduto, color = textColor, fontFamily = textFont2)
                                             }// box dos nomes
                                             Row(){
                                                 Text(text = "Preço: ", color = textColor, fontFamily = textFont)
                                                 Text(text = "R$${produto.precoVenda}", color = textColor, fontFamily = textFont2)
-                                            }// fim box prço
+                                            }// fim box preço
                                         }// fim do box nome comercial e preço
 
                                         Spacer(modifier = Modifier.width(5.dp))
 
                                         Row(modifier = Modifier.padding(start = 10.dp)){
-                                            Text(text = "Nome Genérico: ", color = textColor, fontFamily = textFont)
+                                            Box(modifier = Modifier.width(210.dp)){Text(text = "Nome Genérico: ", color = textColor, fontFamily = textFont)}
                                             Text(text = produto.nomeGenerico, color = textColor, fontFamily = textFont2)
                                         }// box dos generico
 
                                         Spacer(modifier = Modifier.width(5.dp))
 
                                         Row(modifier = Modifier.padding(start = 10.dp)){
-                                            Text(text = "Apresentação: ", color = textColor, fontFamily = textFont)
+                                            Box(modifier = Modifier.width(210.dp)){Text(text = "Apresentação: ", color = textColor, fontFamily = textFont)}
                                             Text(text = produto.apresentacao, color = textColor, fontFamily = textFont2)
                                         }// box dos apresentacao
 
@@ -417,7 +495,7 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ){
                                             Row(verticalAlignment = Alignment.CenterVertically){
-                                                Text(text = "Quantidade: ", color = textColor, fontFamily = textFont)
+                                                Box(modifier = Modifier.width(210.dp)){Text(text = "Quantidade", color = textColor, fontFamily = textFont)}
                                                 Spacer(modifier = Modifier.width(5.dp))
                                                 Box(
                                                     modifier = Modifier
@@ -474,23 +552,116 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                                                 }// fim da opção que aumenta e diminui a quantidade
                                             }// box da quantidade
                                             Row(){
-                                                Button(onClick = {/*TODO*/}, colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = Color.White)) {
+                                                var isDisplayDialog by remember { mutableStateOf(false) }
+                                                Button(onClick = { isDisplayDialog = true }, enabled = tipoUsuario != "funcionario", colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = Color.White)) {
                                                     Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically){
                                                         Text(text = "Editar")
                                                         Spacer(modifier = Modifier.width(2.dp))
                                                         Icon(imageVector = Icons.Filled.Edit, contentDescription = null)
                                                     }
+                                                        if(isDisplayDialog){
+                                                            Dialog(onDismissRequest = { isDisplayDialog = false }) {
+                                                                Column(
+                                                                    modifier = Modifier
+                                                                        .clip(RoundedCornerShape(27.dp))
+                                                                        .width(400.dp)
+                                                                        .height(200.dp)
+                                                                        .background(color = Color.White)
+                                                                ){
+                                                                    Row(
+                                                                        modifier = Modifier
+                                                                            .fillMaxWidth()
+                                                                            .wrapContentHeight(),
+                                                                        horizontalArrangement = Arrangement.End,
+                                                                    ){
+                                                                        IconButton(onClick = {isDisplayDialog = false}) {
+                                                                            Icon(
+                                                                                modifier = Modifier.size(20.dp),
+                                                                                imageVector = Icons.Rounded.Close,
+                                                                                contentDescription = null,
+                                                                                tint = Blue10
+                                                                            )
+                                                                        }// fim do icon button
+                                                                    }// botão de fechar
+                                                                    Row(
+                                                                        modifier = Modifier
+                                                                            .fillMaxWidth(),
+                                                                    ){
+                                                                        Row(
+                                                                            modifier = Modifier
+                                                                                .padding(start = 20.dp,end = 10.dp)
+                                                                        ){
+                                                                            Text(text = "Produto:", fontFamily = textFont, color = Blue10)
+                                                                        }
+                                                                        Spacer(modifier = Modifier.width(15.dp))
+                                                                        Row(){
+                                                                            Text(text = produto.nomeProduto, fontFamily = textFont2, color = Blue10)
+                                                                        }
+                                                                    }// infos do produtos
+
+                                                                    Spacer(modifier = Modifier.height(30.dp))
+                                                                    Row(
+                                                                        modifier = Modifier
+                                                                            .fillMaxWidth()
+                                                                            .padding(start = 20.dp),
+                                                                        verticalAlignment = Alignment.Bottom,
+                                                                        horizontalArrangement = Arrangement.Center
+                                                                    ){
+                                                                        Button(
+                                                                            onClick={produtoSelecionado = produto},
+                                                                            interactionSource = interactionSource,
+                                                                            colors = ButtonDefaults.buttonColors(buttonColor1, contentColor = textButtonColor),
+                                                                            ){
+                                                                            Row(verticalAlignment = Alignment.CenterVertically){
+                                                                                Text(text = "Editar", fontFamily = textFont2)
+                                                                                Icon(
+                                                                                    imageVector = Icons.Rounded.Edit,
+                                                                                    contentDescription = null
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                        Spacer(modifier = Modifier.width(30.dp))
+                                                                        Button(
+                                                                            onClick={viewModel.excluirProduto(produto,
+                                                                                onSuccess = {
+                                                                                        isDisplayDialog = false
+                                                                                        showToastSucesso = true
+                                                                                },
+                                                                                onFailure = { error ->
+                                                                                    showToastErro = true
+                                                                                }
+                                                                            )
+                                                                                    },
+                                                                            colors = ButtonDefaults.buttonColors(Color.Red, contentColor = Color.White),
+                                                                        ){
+                                                                            Row(verticalAlignment = Alignment.CenterVertically){
+                                                                                Text(text = "Excluir", fontFamily = textFont2)
+                                                                                Icon(
+                                                                                    imageVector = Icons.Rounded.Delete,
+                                                                                    contentDescription = null
+                                                                                )
+                                                                            }
+                                                                        }
+
+                                                                    }// botões de operação
+
+                                                                }// fim do back do dialog
+                                                            }// fim do dialog
+                                                        }// fim do if
+
                                                 }// fim do button
+
+
+
                                             }// fim box editar
                                         }// fim do box nome comercial e preço
-
-
-
-
-
                                     }// estrutura o card
                                 }// fim do card
+
                             }// fim do items
+
+
+
                         }// fim lazColumn
 
 
@@ -499,22 +670,89 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
 
 
                 }// fim do column de resultados das pesquisa
-
-
-
-
             }// fim do column de pesquisa
-
-
-
-
-
-
-
 
     }// fim do background
 
+
+
+    com.medsync.medsync.estoque.CustomToast(
+        show = showToastSucesso,
+        message = "Produto Excluído",
+        texto = Color.White,
+        icone = Color.White,
+        backgroundColor = Color.Green,
+        iconVec = Icons.Filled.Check
+    )
+    LaunchedEffect(key1 = showToastSucesso) {
+        if (showToastSucesso) {
+            delay(2000)
+            showToastSucesso = false
+        }
+    }
+
+    com.medsync.medsync.estoque.CustomToast(
+        show = showToastErro,
+        message = "Falha ao Excluir",
+        texto = Color.Black,
+        icone = Color.Black,
+        backgroundColor = Color.Red,
+        iconVec = Icons.Filled.Error
+    )
+    LaunchedEffect(key1 = showToastErro) {
+        if (showToastErro) {
+            delay(2000)
+            showToastErro = false
+        }
+    }
+
+/*
+    if (produtoSelecionado != null) {
+        Editar(
+            produto = produtoSelecionado!!,
+            estoqueViewModel = estoqueViewModel,
+            onVoltar = { produtoSelecionado = null } // Fecha a tela ao concluir
+        )
+    }
+
+ */
+
 }// fim da função
+
+@Composable
+fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, backgroundColor: Color, iconVec: ImageVector) {
+    AnimatedVisibility(
+        visible = show,
+        enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 500))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(backgroundColor, shape = RoundedCornerShape(25.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = message, color = texto, fontFamily = quickSandBold)
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    imageVector = iconVec,
+                    contentDescription = "Success",
+                    tint = icone,
+                    modifier = Modifier.size(24.dp)
+                )
+
+            }
+        }
+    }
+}
+
+
 
 /*TODO terminar a busca */
 @Composable
@@ -537,6 +775,7 @@ fun ProdutoItem(produto: Produto) {
         Text(text = "Nenhum produto encontrado", color = Color.Gray)
     }
 }
+
 
 
 

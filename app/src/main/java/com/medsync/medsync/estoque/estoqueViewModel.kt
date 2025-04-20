@@ -1,131 +1,245 @@
 package com.medsync.medsync.estoque
 
 import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class estoqueViewModel : ViewModel()  {
 
+    // Lista completa de produtos
     private val _produtoList = MutableStateFlow<List<Produto>>(emptyList())
-    var produtoList = _produtoList.asStateFlow()
+    val produtoList: StateFlow<List<Produto>> = _produtoList.asStateFlow()
+
+    // Inicializa o banco
     private val db = FirebaseFirestore.getInstance()
 
-    var pesquisaTexto = mutableStateOf("")  // Guarda o ID digitado pelo usuário
-    private val _produto = mutableStateOf<Produto?>(null)
-    val produto: State<Produto?> = _produto
+    // Estado do texto da pesquisa
+    private val _pesquisaTexto = MutableStateFlow("")
+    val pesquisaTexto: StateFlow<String> = _pesquisaTexto.asStateFlow()
 
+    // Lista filtrada para exibição
+    private val _produtosFiltrados = MutableStateFlow<List<Produto>>(emptyList())
+    val produtosFiltrados: StateFlow<List<Produto>> = _produtosFiltrados.asStateFlow()
 
-    init {
-        getProdutos()
-    }
+    // Filtro de categoria
+    private val _categoriaFiltro = MutableStateFlow("")
+    val categoriaFiltro: StateFlow<String> = _categoriaFiltro.asStateFlow()
 
-    fun getProdutos(){
-        db.collection("produtos")
-            .addSnapshotListener{ value, error ->
-                if(error != null){
-                    return@addSnapshotListener
+    // Filtro de drogaria
+    private val _estabelecimentoId = MutableStateFlow("")
+    val estabelecimentoId: StateFlow<String> = _estabelecimentoId.asStateFlow()
+
+    // nivel de acesso
+    private val _tipoUsuario = MutableStateFlow<String?>(null)
+    val tipoUsuario: StateFlow<String?> = _tipoUsuario
+
+    fun buscarTipoUsuario() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        FirebaseFirestore.getInstance()
+            .collection("usuarios")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    _tipoUsuario.value = document.getString("tipo") // "admin" ou "funcionario"
                 }
-
-                if(value != null){
-                    _produtoList.value = value.toObjects()
-                }
-
             }
-
+            .addOnFailureListener {
+                Log.e("Usuario", "Erro ao buscar tipo do usuário", it)
+            }
     }
 
-    fun buscarProdutoPorId(id: String) {
-        if (id.isBlank()) {
-            _produto.value = null
+    fun obterEstabelecimentoDoUsuarioAtual() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (userId != null) {
+            FirebaseFirestore.getInstance().collection("usuarios")
+                .document(userId)
+                .get()
+                .addOnSuccessListener { doc ->
+                    val estabelecimentoIdFirestore = doc.getString("estabelecimentoId")
+                    if (estabelecimentoIdFirestore != null) {
+                        _estabelecimentoId.value = estabelecimentoIdFirestore
+                        filtrarProdutos() // Refiltra produtos ao obter o ID
+                    }
+                }
+                .addOnFailureListener {
+                    // Aqui você pode logar o erro ou lidar de outra forma
+                }
+        }
+    }
+
+   /* fun carregarProdutosDoEstabelecimento(estabelecimentoId: String) {
+        FirebaseFirestore.getInstance().collection("produtos")
+            .whereEqualTo("estabelecimentoId", estabelecimentoId)
+            .get()
+            .addOnSuccessListener { result ->
+                val lista = result.documents.mapNotNull { doc ->
+                    doc.toObject(Produto::class.java)
+                }
+                _produtosFiltrados.value = lista
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Erro ao buscar produtos: ", e)
+            }
+    }
+
+    */
+
+
+    fun carregarProdutos(estabelecimentoId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("produtos")
+            .whereEqualTo("estabelecimentoId", estabelecimentoId)
+            .get()
+            .addOnSuccessListener { result ->
+                val listaProdutos = result.map { document ->
+                    Produto(
+                        nomeProduto = document.getString("nomeProduto") ?: "",
+                        nomeGenerico = document.getString("nomeGenerico") ?: "",
+                        apresentacao = document.getString("apresentacao") ?: "",
+                        precoVenda = document.getString("precoVenda") ?: "",
+                        qnt = document.getLong("qnt")?.toInt() ?: 0,
+                        estabelecimentoId = document.getString("estabelecimentoId") ?: "",
+                        categoria = document.getString("categoria") ?: ""
+                    )
+                }
+                _produtoList.value = listaProdutos   // Atualiza a lista completa
+                filtrarProdutos()
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Erro ao carregar produtos", e)
+            }
+    }
+
+    // os 2 atualizar fazem a conversão de variaveis
+    fun atualizarTextoPesquisa(novoTexto: String) {
+        _pesquisaTexto.value = novoTexto
+        filtrarProdutos()
+    }
+
+    fun atualizarCategoriaFiltro(novaCategoria: String) {
+        _categoriaFiltro.value = novaCategoria
+        filtrarProdutos()
+    }
+
+    // filtro propriamente dito
+    /*
+    private fun filtrarProdutos() {
+        val textoPesquisa = _pesquisaTexto.value
+        val categoriaFiltro = _categoriaFiltro.value
+        val estabelecimentoId = _estabelecimentoId.value
+
+        if (textoPesquisa.isBlank() && categoriaFiltro.isBlank()) {
+            _produtosFiltrados.value = _produtoList.value.filter { produto ->
+                produto.estabelecimentoId == estabelecimentoId
+            }
             return
         }
 
-        db.collection("produtos").document(id).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    _produto.value = document.toObject(Produto::class.java)
-                } else {
-                    _produto.value = null
-                    Log.e("Firestore", "Produto não encontrado")
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Erro ao buscar produto", e)
-            }
+        _produtosFiltrados.value = _produtoList.value.filter { produto ->
+            val nomeProdutoCorresponde = produto.nomeProduto.contains(textoPesquisa, ignoreCase = true)
+            val categoriaCorresponde = categoriaFiltro.isBlank() || produto.categoria == categoriaFiltro
+            val mesmoEstabelecimento = produto.estabelecimentoId == estabelecimentoId
+
+            nomeProdutoCorresponde && categoriaCorresponde && mesmoEstabelecimento
+        }
     }
 
-    private val _listaProdutos = mutableStateOf<List<Produto>>(emptyList())
-    val listaProdutos: State<List<Produto>> = _listaProdutos
+     */
 
-    fun buscarTodosProdutos() {
-        FirebaseFirestore.getInstance().collection("produtos").get()
-            .addOnSuccessListener { result ->
-                val lista = mutableListOf<Produto>()
-                for (document in result) {
-                    document.toObject(Produto::class.java)?.let { produto ->
-                        lista.add(produto)
-                    }
-                }
-                _listaProdutos.value = lista // Atualiza a lista de produtos
+    private fun filtrarProdutos() {
+        val textoPesquisa = _pesquisaTexto.value.trim()
+        val categoriaFiltro = _categoriaFiltro.value.trim()
+        val estabelecimentoId = _estabelecimentoId.value
+
+        // Filtro base: todos os produtos do estabelecimento atual
+        val produtosDoEstabelecimento = _produtoList.value.filter { produto ->
+            produto.estabelecimentoId == estabelecimentoId
+        }
+
+        // Se ambos os filtros estão vazios, retorna tudo do estabelecimento
+        if (textoPesquisa.isBlank() && categoriaFiltro.isBlank()) {
+            _produtosFiltrados.value = produtosDoEstabelecimento
+            return
+        }
+
+        // Aplica os filtros combinados
+        _produtosFiltrados.value = produtosDoEstabelecimento.filter { produto ->
+            val nomeCorresponde = produto.nomeProduto.contains(textoPesquisa, ignoreCase = true)
+
+            val categoriaProduto = produto.categoria?.trim() ?: ""
+            val categoriaCorresponde = categoriaFiltro.isBlank() ||
+                    categoriaProduto.equals(categoriaFiltro, ignoreCase = true)
+
+            nomeCorresponde && categoriaCorresponde
+        }
+    }
+
+    fun excluirProduto(produto: Produto, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        db.collection("produtos")
+            .document(produto.nomeProduto) // O ID é o nomeProduto
+            .delete()
+            .addOnSuccessListener {
+                Log.d("Firestore", "Produto deletado com sucesso")
+                onSuccess() // Chama a função de sucesso para atualizar a UI
             }
             .addOnFailureListener { e ->
-                Log.e("Firestore", "Erro ao buscar lista de produtos", e)
+                Log.e("Firestore", "Erro ao deletar produto", e)
+                onFailure(e) // Chama a função de erro para exibir mensagens
             }
-    }// fim de buscar produtos
+    }
 
     fun incrementarQuantidade(produto: Produto) {
         val novaQuantidade = produto.qnt + 1
         FirebaseFirestore.getInstance().collection("produtos")
-            .document(produto.nomeProduto) // Usando nomeProduto como ID
+            .document(produto.nomeProduto)  // Certifique-se de que cada produto tenha um 'id' único
             .update("qnt", novaQuantidade)
             .addOnSuccessListener {
-                Log.d("Firestore", "Quantidade incrementada com sucesso")
+                // Atualizando o estado local após sucesso no Firestore
+                _produtosFiltrados.value = _produtosFiltrados.value.map { item ->
+                    if (item.nomeProduto == produto.nomeProduto) {
+                        item.copy(qnt = novaQuantidade)  // Atualiza no estado local
+                    } else {
+                        item
+                    }
+                }
             }
             .addOnFailureListener { e ->
-                Log.e("Firestore", "Erro ao incrementar quantidade", e)
+                Log.e("Firestore", "Erro ao atualizar a quantidade", e)
             }
     }
 
     fun decrementarQuantidade(produto: Produto) {
-        val novaQuantidade = if (produto.qnt > 0) produto.qnt - 1 else 0
-        FirebaseFirestore.getInstance().collection("produtos")
-            .document(produto.nomeProduto) // Usando nomeProduto como ID
-            .update("qnt", novaQuantidade)
-            .addOnSuccessListener {
-                Log.d("Firestore", "Quantidade decrementada com sucesso")
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Erro ao decrementar quantidade", e)
-            }
-    }
+        if (produto.qnt > 0) { // Impede decremento quando a quantidade for 0 ou menor
 
-    init {
-        escutarProdutosTempoReal() // Iniciar o listener quando a ViewModel for criada
-    }
-
-    private fun escutarProdutosTempoReal() {
-        db.collection("produtos")
-            .addSnapshotListener { snapshots, e ->
-                if (e != null) {
-                    Log.e("Firestore", "Erro ao escutar o Firestore", e)
-                    return@addSnapshotListener
-                }
-                val listaAtualizada = mutableListOf<Produto>()
-                snapshots?.forEach { document ->
-                    document.toObject(Produto::class.java).let { produto ->
-                        // Adiciona o ID do documento para poder atualizar depois
-                        listaAtualizada.add(produto)
+            val novaQuantidade = produto.qnt - 1
+            // Atualizando no Firestore
+            FirebaseFirestore.getInstance().collection("produtos")
+                .document(produto.nomeProduto)  // Supondo que cada produto tem um 'id' único
+                .update("qnt", novaQuantidade)
+                .addOnSuccessListener {
+                    // Atualizando o estado local se necessário
+                    _produtosFiltrados.value = _produtosFiltrados.value.map {
+                        if (it.nomeProduto == produto.nomeProduto) {
+                            it.copy(qnt = novaQuantidade) // Atualiza no estado local
+                        } else {
+                            it
+                        }
                     }
                 }
-
-                _listaProdutos.value = listaAtualizada
-            }
+                .addOnFailureListener { e ->
+                    Log.e("Firestore", "Erro ao atualizar a quantidade", e)
+                }
+        }
     }
+
+
 
 }// fim da viewmodel
 

@@ -50,7 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.medsync.medsync.TelaMenu
+import com.medsync.medsync.menu.TelaMenu
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.MedSyncTheme
