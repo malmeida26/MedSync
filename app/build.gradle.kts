@@ -92,6 +92,9 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.database)
 
+    //navigation
+    implementation("androidx.navigation:navigation-compose:2.7.5")
+
 
 
 

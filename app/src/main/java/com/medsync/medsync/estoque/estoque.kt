@@ -221,20 +221,13 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
         viewModel.buscarTipoUsuario()
     }
 
-
-
-    //iniciar funçoes
-
+    //localizar ambiente
     LaunchedEffect(Unit) {
-        viewModel.obterEstabelecimentoDoUsuarioAtual() // Chama diretamente sem necessidade de callback
+        viewModel.obterEstabelecimentoDoUsuarioAtual()
     }
-
     val estabelecimentoId by viewModel.estabelecimentoId.collectAsState()
 
-    // Assim que o estabelecimentoId for atualizado, você pode carregar os produtos
     if (estabelecimentoId.isNotEmpty()) {
-        // Carregar os produtos ou fazer outra ação
-       // viewModel.carregarProdutosDoEstabelecimento(estabelecimentoId)
         viewModel.carregarProdutos(estabelecimentoId)
     } else {
         Text("Estabelecimento nao encontrado")
@@ -494,63 +487,65 @@ fun estoque(modifier: Modifier = Modifier, viewModel: estoqueViewModel) {
                                             modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 5.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ){
-                                            Row(verticalAlignment = Alignment.CenterVertically){
-                                                Box(modifier = Modifier.width(210.dp)){Text(text = "Quantidade", color = textColor, fontFamily = textFont)}
-                                                Spacer(modifier = Modifier.width(5.dp))
-                                                Box(
-                                                    modifier = Modifier
-                                                        .background(Color.White, shape = RoundedCornerShape(10.dp))
-                                                        .wrapContentSize()
-                                                ) {
-                                                    OutlinedTextField(
-                                                        value = produto.qnt.toString(),
-                                                        onValueChange = { },
-                                                        readOnly = true,
-                                                        textStyle = TextStyle(color = Color.White),
-                                                        placeholder = { Text(text = produto.qnt.toString(), fontFamily = textFont) },
-                                                        shape = RoundedCornerShape(10.dp),
-                                                        colors = TextFieldDefaults.colors(
-                                                            focusedContainerColor = Color.Transparent,
-                                                            unfocusedContainerColor = Color.Transparent,
-                                                            disabledContainerColor = Color.Transparent,
-                                                            errorContainerColor = Color.Transparent,
-                                                            focusedIndicatorColor = Color.Transparent,
-                                                            unfocusedIndicatorColor = Color.Transparent,
-                                                            disabledIndicatorColor = Color.Transparent,
-                                                            errorIndicatorColor = Color.Transparent,
-                                                            focusedTextColor = Color.White,
-                                                            unfocusedTextColor = Color.White,
-                                                            disabledTextColor = Color.White,
-                                                            errorTextColor = Color.White,
-                                                        ),
-                                                        leadingIcon = {
-                                                            IconButton(onClick = {
-                                                                viewModel.decrementarQuantidade(produto)
-                                                            }) {
-                                                                Icon(
-                                                                    imageVector = Icons.Filled.Remove,
-                                                                    contentDescription = "Subtrair",
-                                                                    tint = Color.White,
-                                                                )
-                                                            }
-                                                        },
-                                                        trailingIcon = {
-                                                            IconButton(onClick = {viewModel.incrementarQuantidade(produto)}) {
-                                                                Icon(
-                                                                    imageVector = Icons.Filled.Add,
-                                                                    contentDescription = "Somar",
-                                                                    tint = Color.White,
-                                                                )
-                                                            }
-                                                        },
+                                            if(tipoUsuario == "administrador"){
+                                                Row(verticalAlignment = Alignment.CenterVertically){
+                                                    Box(modifier = Modifier.width(210.dp)){Text(text = "Quantidade", color = textColor, fontFamily = textFont)}
+                                                    Spacer(modifier = Modifier.width(5.dp))
+                                                    Box(
                                                         modifier = Modifier
-                                                            .background(buttonColor, shape = RoundedCornerShape(10.dp))
-                                                            .wrapContentHeight()
-                                                            .width(150.dp)
-                                                            .padding(0.dp)
-                                                    )
-                                                }// fim da opção que aumenta e diminui a quantidade
-                                            }// box da quantidade
+                                                            .background(Color.White, shape = RoundedCornerShape(10.dp))
+                                                            .wrapContentSize()
+                                                    ) {
+                                                        OutlinedTextField(
+                                                            value = produto.qnt.toString(),
+                                                            onValueChange = { },
+                                                            readOnly = true,
+                                                            textStyle = TextStyle(color = Color.White),
+                                                            placeholder = { Text(text = produto.qnt.toString(), fontFamily = textFont) },
+                                                            shape = RoundedCornerShape(10.dp),
+                                                            colors = TextFieldDefaults.colors(
+                                                                focusedContainerColor = Color.Transparent,
+                                                                unfocusedContainerColor = Color.Transparent,
+                                                                disabledContainerColor = Color.Transparent,
+                                                                errorContainerColor = Color.Transparent,
+                                                                focusedIndicatorColor = Color.Transparent,
+                                                                unfocusedIndicatorColor = Color.Transparent,
+                                                                disabledIndicatorColor = Color.Transparent,
+                                                                errorIndicatorColor = Color.Transparent,
+                                                                focusedTextColor = Color.White,
+                                                                unfocusedTextColor = Color.White,
+                                                                disabledTextColor = Color.White,
+                                                                errorTextColor = Color.White,
+                                                            ),
+                                                            leadingIcon = {
+                                                                IconButton(onClick = {
+                                                                    viewModel.decrementarQuantidade(produto)
+                                                                }) {
+                                                                    Icon(
+                                                                        imageVector = Icons.Filled.Remove,
+                                                                        contentDescription = "Subtrair",
+                                                                        tint = Color.White,
+                                                                    )
+                                                                }
+                                                            },
+                                                            trailingIcon = {
+                                                                IconButton(onClick = {viewModel.incrementarQuantidade(produto)}) {
+                                                                    Icon(
+                                                                        imageVector = Icons.Filled.Add,
+                                                                        contentDescription = "Somar",
+                                                                        tint = Color.White,
+                                                                    )
+                                                                }
+                                                            },
+                                                            modifier = Modifier
+                                                                .background(buttonColor, shape = RoundedCornerShape(10.dp))
+                                                                .wrapContentHeight()
+                                                                .width(150.dp)
+                                                                .padding(0.dp)
+                                                        )
+                                                    }// fim da opção que aumenta e diminui a quantidade
+                                                }// box da quantidade
+                                            }
                                             Row(){
                                                 var isDisplayDialog by remember { mutableStateOf(false) }
                                                 Button(onClick = { isDisplayDialog = true }, enabled = tipoUsuario != "funcionario", colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = Color.White)) {

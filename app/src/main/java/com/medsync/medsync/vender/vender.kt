@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +48,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,8 +63,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.medsync.medsync.menu.TelaMenu
+import androidx.navigation.compose.rememberNavController
 import com.medsync.medsync.estoque.Produto
+import com.medsync.medsync.menu.TelaMenu
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20
 import com.medsync.medsync.ui.theme.ui.theme.MedSyncTheme
@@ -84,6 +88,8 @@ class vender : ComponentActivity() {
 
                 val isPressed by interactionSource.collectIsPressedAsState() //começa com false
                 val isPressed2 by interactionSource2.collectIsPressedAsState() //começa com false
+
+                val navController = rememberNavController()
 
                 val iconColor = if(isPressed){
                     Color.White
@@ -185,23 +191,48 @@ class vender : ComponentActivity() {
                     )
 
                 }) { innerPadding ->
-                    vender(Modifier.padding(innerPadding), viewModel = venderViewModel())
+                    vender(
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = venderViewModel(),
+                    )
                 }
             }// fim do theme
         }
     }
 }
 
+@ExperimentalMaterial3Api
 @Composable
 fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
 
     // dados de entrada
     val pesquisaTexto by viewModel.pesquisaTexto.collectAsState()
     val produtosFiltrados by viewModel.produtosFiltrados.collectAsState()
-    val quantidade by viewModel.quantidade.collectAsState()
-    var produtoSelecionado by remember { mutableStateOf<Produto?>(null) }
-    var qntSelecionada by remember { mutableStateOf(0) }
 
+    val produtoSelecionado2 by viewModel.produtoSelecionado.collectAsState()
+    val quantidadeSelecionada by viewModel.quantidadeSelecionada.collectAsState()
+
+    //permissão
+    val tipoUsuario by viewModel.tipoUsuario.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.buscarTipoUsuario()
+    }
+
+    //localizar ambiente
+    LaunchedEffect(Unit) {
+        viewModel.obterEstabelecimentoDoUsuarioAtual()
+    }
+    val estabelecimentoId by viewModel.estabelecimentoId.collectAsState()
+
+    if (estabelecimentoId.isNotEmpty()) {
+        viewModel.carregarProdutos(estabelecimentoId)
+    } else {
+        Text("Estabelecimento nao encontrado")
+    }
+
+    // navegação
+    var context = LocalContext.current
+    var intentDados = Intent(context, dados::class.java)
 
     // cosmeticos
     val fundoCampo = Blue20
@@ -264,7 +295,7 @@ fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
                 {
                     OutlinedTextField(
                         value = pesquisaTexto,
-                        onValueChange = { viewModel.atualizarPesquisa(it) },
+                        onValueChange = { novoTexto -> viewModel.atualizarTextoPesquisa(novoTexto) },
                         maxLines = 1,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.White,
@@ -294,15 +325,24 @@ fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
                 var qntSelecionada by remember { mutableStateOf(0) }
                Column(){
 
-
                    LazyColumn(contentPadding = PaddingValues(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                        items(produtosFiltrados) {
                                produto ->
                            val qnt = remember { mutableStateOf(0) }
+                           val isSelecionado = produto == produtoSelecionado2
+
                            Card(
                                shape = RoundedCornerShape(10.dp),
                                colors = CardDefaults.cardColors(containerColor = backCard),
-                               modifier = Modifier.fillMaxWidth()
+                               modifier = Modifier
+                                   .fillMaxWidth()
+                                   .clickable { viewModel.selecionarProduto(produto)
+                                       viewModel.resetarEstadoProdutoAdicionado() }
+                                   .border(
+                                       width = if (isSelecionado) 2.dp else 0.dp,
+                                       color = if (isSelecionado) Blue10 else Color.Transparent,
+                                       shape = RoundedCornerShape(10.dp)
+                                   ),
                            ){
                                Column() {
                                    Row(
@@ -339,7 +379,7 @@ fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
                                            Box(modifier = Modifier.width(210.dp)){Text(text = "Preço: ", color = textPreco, fontFamily = textFont)}
                                            Text(text = "R$${produto.precoVenda}", color = textColor, fontFamily = textFont2)
                                        }// box do preço
-                                       Row(){
+                                       Row(modifier = Modifier.padding(end = 10.dp, bottom = 10.dp)){
                                            OutlinedTextField(
                                                value = qnt.value.toString(),
                                                onValueChange = { },
@@ -348,18 +388,18 @@ fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
                                                placeholder = {  },
                                                shape = RoundedCornerShape(10.dp),
                                                colors = TextFieldDefaults.colors(
-                                                   focusedContainerColor = Color.Transparent,
-                                                   unfocusedContainerColor = Color.Transparent,
-                                                   disabledContainerColor = Color.Transparent,
-                                                   errorContainerColor = Color.Transparent,
-                                                   focusedIndicatorColor = Color.Transparent,
-                                                   unfocusedIndicatorColor = Color.Transparent,
-                                                   disabledIndicatorColor = Color.Transparent,
-                                                   errorIndicatorColor = Color.Transparent,
-                                                   focusedTextColor = Blue10,
-                                                   unfocusedTextColor = Blue10,
-                                                   disabledTextColor = Blue10,
-                                                   errorTextColor = Blue10,
+                                                   focusedContainerColor = fundoCampo,
+                                                   unfocusedContainerColor = fundoCampo,
+                                                   disabledContainerColor = fundoCampo,
+                                                   errorContainerColor = fundoCampo,
+                                                   focusedIndicatorColor = fundoCampo,
+                                                   unfocusedIndicatorColor = fundoCampo,
+                                                   disabledIndicatorColor = fundoCampo,
+                                                   errorIndicatorColor = fundoCampo,
+                                                   focusedTextColor = fundoCampo,
+                                                   unfocusedTextColor = fundoCampo,
+                                                   disabledTextColor = fundoCampo,
+                                                   errorTextColor = fundoCampo,
                                                ),
                                                leadingIcon = {
                                                    IconButton(onClick = {
@@ -403,31 +443,38 @@ fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
                                    }// fim do box nome comercial e preço
                                }// estrutura o card
                            }// fim do card
-
-
-
                        }// fim do items
                    }// fim do lazycolumn
-                   if (pesquisaTexto.isNotBlank()) {
+                   if (produtoSelecionado2 != null) {
+                       val produtoAdicionado by viewModel.produtoAdicionado.collectAsState()
                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,){
                            Button(
                                onClick = {
-                                   produtoSelecionado?.let { produto ->  // Só executa se não for nulo
-                                       viewModel.atualizarQuantidade(produto, qntSelecionada)
-                                       qntSelecionada = 0 // Resetar quantidade após atualização
+                                   produtoSelecionado2?.let { produto ->
+                                       if (!produtoAdicionado) {
+                                           viewModel.adicionarAoCarrinho(produto, qntSelecionada)
+                                           viewModel.marcarProdutoComoAdicionado()
+                                       } else {
+                                       context.startActivity(intentDados)
                                    }
+                                   }
+
                                },
                                interactionSource = interactionSource,
-                               colors = ButtonDefaults.buttonColors(buttonColor, contentColor = textButtonColor),
+                               colors = ButtonDefaults.buttonColors(
+                                   containerColor = if (produtoAdicionado) Color(0xFF4CAF50) else buttonColor,
+                                   contentColor = textButtonColor
+                               ),
                                shape = RoundedCornerShape(15.dp),
                                modifier = Modifier
                                    .wrapContentWidth()
                                    .padding(10.dp),
                            ) {
-                               Text("Adicionar", fontFamily = textFont2, color = textButtonColor)
+                               Text(text = if (produtoAdicionado) "Avançar" else "Adicionar",
+                                   fontFamily = textFont2)
                            }
                        }
-                   }
+                   }// fim botão
 
                }
 

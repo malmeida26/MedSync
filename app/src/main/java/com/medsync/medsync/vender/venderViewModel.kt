@@ -2,6 +2,7 @@ package com.medsync.medsync.vender
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.medsync.medsync.estoque.Produto
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,13 +25,164 @@ class venderViewModel {
     private val _produtosFiltrados = MutableStateFlow<List<Produto>>(emptyList())
     val produtosFiltrados: StateFlow<List<Produto>> = _produtosFiltrados.asStateFlow()
 
-    // Filtro de categoria
-    private val _categoriaFiltro = MutableStateFlow("")
-    val categoriaFiltro: StateFlow<String> = _categoriaFiltro.asStateFlow()
-
     // Quantidade
     private val _quantidade = MutableStateFlow(0)
     val quantidade: StateFlow<Int> = _quantidade.asStateFlow()
+
+    // nivel de acesso
+    private val _tipoUsuario = MutableStateFlow<String?>(null)
+    val tipoUsuario: StateFlow<String?> = _tipoUsuario
+
+    // Filtro de drogaria
+    private val _estabelecimentoId = MutableStateFlow("")
+    val estabelecimentoId: StateFlow<String> = _estabelecimentoId.asStateFlow()
+
+    // Carrinho
+    private val _itensCarrinho = MutableStateFlow<List<ItemCarrinho>>(emptyList())
+    val itensCarrinho: StateFlow<List<ItemCarrinho>> = _itensCarrinho.asStateFlow()
+
+    // Seletor
+    private val _produtoSelecionado = MutableStateFlow<Produto?>(null)
+    val produtoSelecionado: StateFlow<Produto?> = _produtoSelecionado.asStateFlow()
+
+    // Quantia
+    private val _quantidadeSelecionada = MutableStateFlow(0)
+    val quantidadeSelecionada: StateFlow<Int> = _quantidadeSelecionada.asStateFlow()
+
+    // verificador do carrinho
+    private val _produtoAdicionado = MutableStateFlow(false)
+    val produtoAdicionado: StateFlow<Boolean> = _produtoAdicionado
+
+    private val _nomeCliente = MutableStateFlow("")
+    val nomeCliente: StateFlow<String> = _nomeCliente.asStateFlow()
+
+    private val _formaPagamento = MutableStateFlow("")
+    val formaPagamento: StateFlow<String> = _formaPagamento.asStateFlow()
+
+
+
+// funções identificadoras
+    fun buscarTipoUsuario() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        FirebaseFirestore.getInstance()
+            .collection("usuarios")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    _tipoUsuario.value = document.getString("tipo") // "admin" ou "funcionario"
+                }
+            }
+            .addOnFailureListener {
+                Log.e("Usuario", "Erro ao buscar tipo do usuário", it)
+            }
+    }
+
+    fun obterEstabelecimentoDoUsuarioAtual() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (userId != null) {
+            FirebaseFirestore.getInstance().collection("usuarios")
+                .document(userId)
+                .get()
+                .addOnSuccessListener { doc ->
+                    val estabelecimentoIdFirestore = doc.getString("estabelecimentoId")
+                    if (estabelecimentoIdFirestore != null) {
+                        _estabelecimentoId.value = estabelecimentoIdFirestore
+                        filtrarProdutos() // Refiltra produtos ao obter o ID
+                    }
+                }
+                .addOnFailureListener {
+                    // Aqui você pode logar o erro ou lidar de outra forma
+                }
+        }
+    }
+
+    //
+    fun carregarProdutos(estabelecimentoId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("produtos")
+            .whereEqualTo("estabelecimentoId", estabelecimentoId)
+            .get()
+            .addOnSuccessListener { result ->
+                val listaProdutos = result.map { document ->
+                    Produto(
+                        nomeProduto = document.getString("nomeProduto") ?: "",
+                        nomeGenerico = document.getString("nomeGenerico") ?: "",
+                        apresentacao = document.getString("apresentacao") ?: "",
+                        precoVenda = document.getString("precoVenda") ?: "",
+                        qnt = document.getLong("qnt")?.toInt() ?: 0,
+                        estabelecimentoId = document.getString("estabelecimentoId") ?: "",
+                        categoria = document.getString("categoria") ?: ""
+                    )
+                }
+                _produtoList.value = listaProdutos   // Atualiza a lista completa
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Erro ao carregar produtos", e)
+            }
+    }
+
+    // funções de filtro
+    fun atualizarTextoPesquisa(novoTexto: String) {
+        _pesquisaTexto.value = novoTexto
+        filtrarProdutos()
+    }
+
+    private fun filtrarProdutos() {
+        val textoPesquisa = _pesquisaTexto.value.trim()
+        val estabelecimentoId = _estabelecimentoId.value
+
+        // Filtro base: todos os produtos do estabelecimento atual
+        val produtosDoEstabelecimento = _produtoList.value.filter { produto ->
+            produto.estabelecimentoId == estabelecimentoId
+        }
+
+        if (textoPesquisa.isBlank()) {
+            _produtosFiltrados.value = emptyList()
+            return
+        }
+
+        _produtosFiltrados.value = produtosDoEstabelecimento.filter { produto ->
+            val nomeCorresponde = produto.nomeProduto.contains(textoPesquisa, ignoreCase = true)
+
+            nomeCorresponde
+        }
+    }
+
+    fun selecionarProduto(produto: Produto?, quantidade: Int = 0) {
+        _produtoSelecionado.value = produto
+        _quantidadeSelecionada.value = quantidade
+    }
+
+    // funções de operação
+    fun adicionarAoCarrinho(produto: Produto, quantidade: Int) {
+        if (quantidade <= 0) return
+
+        val listaAtual = _itensCarrinho.value.toMutableList()
+
+        // Verifica se o produto já está no carrinho
+        val itemExistente = listaAtual.find { it.produto.nomeProduto == produto.nomeProduto }
+
+        if (itemExistente != null) {
+            // Atualiza a quantidade
+            itemExistente.quantidade += quantidade
+        } else {
+            // Adiciona novo item
+            listaAtual.add(ItemCarrinho(produto, quantidade))
+        }
+
+        _itensCarrinho.value = listaAtual
+    }
+
+    fun marcarProdutoComoAdicionado() {
+        _produtoAdicionado.value = true
+    }
+
+    fun resetarEstadoProdutoAdicionado() {
+        _produtoAdicionado.value = false
+    }
 
     fun atualizarQuantidade(produto: Produto, subtrQuantidade: Int){
         val novaQuantidade =  produto.qnt - subtrQuantidade
@@ -45,59 +197,21 @@ class venderViewModel {
             }
     }
 
-
-
-    init {
-        getProdutos()
+    // funções de dados da venda
+    fun setNomeCliente(nome: String) {
+        _nomeCliente.value = nome
     }
 
-    fun getProdutos() {
-        db.collection("produtos")
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    return@addSnapshotListener
-                }
-                if (value != null) {
-                    val lista = value.toObjects(Produto::class.java)
-                    _produtoList.value = lista
-                    //_produtosFiltrados.value = lista // Inicialmente exibe todos
-                }
-            }
+    fun setFormaPagamento(forma: String) {
+        _formaPagamento.value = forma
     }
 
-    fun atualizarPesquisa(novoTexto: String) {
-        _pesquisaTexto.value = novoTexto
 
-        _produtosFiltrados.value = if (novoTexto.isBlank()) {
-            emptyList()
-        } else {
-            _produtoList.value.filter { produto ->
-                produto.nomeProduto.contains(novoTexto, ignoreCase = true)
-            }
-        }
-    }
 
 
 
 
     private val _listaProdutos = mutableStateOf<List<Produto>>(emptyList())
-
-    fun buscarTodosProdutos() {
-        FirebaseFirestore.getInstance().collection("produtos").get()
-            .addOnSuccessListener { result ->
-                val lista = mutableListOf<Produto>()
-                for (document in result) {
-                    document.toObject(Produto::class.java)?.let { produto ->
-                        lista.add(produto)
-                    }
-                }
-                _listaProdutos.value = lista // Atualiza a lista de produtos
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Erro ao buscar lista de produtos", e)
-            }
-    }// fim de buscar produtos
-
 
     init {
         escutarProdutosTempoReal() // Iniciar o listener quando a ViewModel for criada

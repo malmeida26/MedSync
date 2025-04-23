@@ -438,6 +438,9 @@ fun LoginTela() {
     }// fim do background
 }// fim da função
 
+
+
+
 @Composable
 fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, backgroundColor: Color, iconVec: ImageVector) {
     AnimatedVisibility(
@@ -470,7 +473,6 @@ fun CustomToast(show: Boolean, message: String, texto: Color, icone: Color, back
         }
     }
 }
-
 
 class AuthenticationManager {
     private val auth = Firebase.auth

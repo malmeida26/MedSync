@@ -309,7 +309,11 @@ fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
                             }
                         },
                         onTap = {
-                            context.startActivity(intentEstoque)
+                           if(tipoUsuario == "administrador"){
+                               context.startActivity(intentProdutos)
+                           }else{
+                               showToastSemAcesso = true;
+                           }
                         }
                     )
                 }, contentAlignment = Alignment.Center)

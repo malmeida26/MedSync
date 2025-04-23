@@ -74,24 +74,6 @@ class estoqueViewModel : ViewModel()  {
         }
     }
 
-   /* fun carregarProdutosDoEstabelecimento(estabelecimentoId: String) {
-        FirebaseFirestore.getInstance().collection("produtos")
-            .whereEqualTo("estabelecimentoId", estabelecimentoId)
-            .get()
-            .addOnSuccessListener { result ->
-                val lista = result.documents.mapNotNull { doc ->
-                    doc.toObject(Produto::class.java)
-                }
-                _produtosFiltrados.value = lista
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Erro ao buscar produtos: ", e)
-            }
-    }
-
-    */
-
-
     fun carregarProdutos(estabelecimentoId: String) {
         FirebaseFirestore.getInstance()
             .collection("produtos")
@@ -127,31 +109,6 @@ class estoqueViewModel : ViewModel()  {
         _categoriaFiltro.value = novaCategoria
         filtrarProdutos()
     }
-
-    // filtro propriamente dito
-    /*
-    private fun filtrarProdutos() {
-        val textoPesquisa = _pesquisaTexto.value
-        val categoriaFiltro = _categoriaFiltro.value
-        val estabelecimentoId = _estabelecimentoId.value
-
-        if (textoPesquisa.isBlank() && categoriaFiltro.isBlank()) {
-            _produtosFiltrados.value = _produtoList.value.filter { produto ->
-                produto.estabelecimentoId == estabelecimentoId
-            }
-            return
-        }
-
-        _produtosFiltrados.value = _produtoList.value.filter { produto ->
-            val nomeProdutoCorresponde = produto.nomeProduto.contains(textoPesquisa, ignoreCase = true)
-            val categoriaCorresponde = categoriaFiltro.isBlank() || produto.categoria == categoriaFiltro
-            val mesmoEstabelecimento = produto.estabelecimentoId == estabelecimentoId
-
-            nomeProdutoCorresponde && categoriaCorresponde && mesmoEstabelecimento
-        }
-    }
-
-     */
 
     private fun filtrarProdutos() {
         val textoPesquisa = _pesquisaTexto.value.trim()
