@@ -350,7 +350,7 @@ fun LoginTela() {
                                 .onEach { response ->
                                     if (response is AuthReponse.Success) {
                                         contexto.startActivity(intentMenu)
-                                        showToastBV = true
+                                       // showToastBV = true
                                     } else {
                                         showToastCredenciais = true
                                     }
@@ -427,6 +427,7 @@ fun LoginTela() {
             }
         }
 
+        /*
         CustomToast(show = showToastLogando, message = "Bem vindo!", texto = Blue10, icone = Blue10, backgroundColor = Blue20, iconVec = Icons.Filled.Login)
         LaunchedEffect(key1 = showToastLogando) {
             if (showToastLogando) {
@@ -434,6 +435,8 @@ fun LoginTela() {
                 showToastLogando = false
             }
         }
+
+         */
 
     }// fim do background
 }// fim da função

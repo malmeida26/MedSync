@@ -16,4 +16,6 @@
     <string name="title_activity_editar">editar</string>
     <string name="title_activity_dados">dados</string>
     <string name="title_activity_revisao">revisao</string>
+    <string name="title_activity_finalizar_venda">finalizar_venda</string>
+    <string name="title_activity_cancelar_venda">cancelar_venda</string>
 </resources>

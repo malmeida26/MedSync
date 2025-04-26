@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.medsync.medsync.MainActivity
-import com.medsync.medsync.TelaPerfil
+import com.medsync.medsync.perfil.TelaPerfil
 import com.medsync.medsync.escqueciSenha.ui.theme.MedSyncTheme
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
 import com.medsync.medsync.ui.theme.ui.theme.Blue20

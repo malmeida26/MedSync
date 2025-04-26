@@ -1,4 +1,4 @@
-package com.medsync.medsync
+package com.medsync.medsync.perfil
 
 import android.content.Intent
 import android.os.Bundle

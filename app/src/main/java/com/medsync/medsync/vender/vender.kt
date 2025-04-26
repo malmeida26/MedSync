@@ -64,6 +64,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
+import com.medsync.medsync.VendaData
 import com.medsync.medsync.estoque.Produto
 import com.medsync.medsync.menu.TelaMenu
 import com.medsync.medsync.ui.theme.ui.theme.Blue10
@@ -452,7 +453,7 @@ fun vender(modifier: Modifier = Modifier, viewModel: venderViewModel) {
                                onClick = {
                                    produtoSelecionado2?.let { produto ->
                                        if (!produtoAdicionado) {
-                                           viewModel.adicionarAoCarrinho(produto, qntSelecionada)
+                                           VendaData.itensCarrinho.add(ItemCarrinho(produto, qntSelecionada))
                                            viewModel.marcarProdutoComoAdicionado()
                                        } else {
                                        context.startActivity(intentDados)

@@ -17,6 +17,11 @@
         android:theme="@style/Theme.MedSync"
         tools:targetApi="31">
         <activity
+            android:name="com.medsync.medsync.vender.finalizar_venda"
+            android:exported="false"
+            android:label="@string/title_activity_finalizar_venda"
+            android:theme="@style/Theme.MedSync" />
+        <activity
             android:name="com.medsync.medsync.vender.revisao"
             android:exported="false"
             android:label="@string/title_activity_revisao"
@@ -62,7 +67,7 @@
             android:label="@string/title_activity_esqueci_senha"
             android:theme="@style/Theme.MedSync" />
         <activity
-            android:name="com.medsync.medsync.TelaPerfil"
+            android:name="com.medsync.medsync.perfil.TelaPerfil"
             android:exported="true"
             android:label="@string/title_activity_tela_perfil"
             android:theme="@style/Theme.MedSync" />

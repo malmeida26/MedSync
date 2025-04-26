@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.AutoGraph
@@ -60,7 +61,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.medsync.medsync.MainActivity
-import com.medsync.medsync.TelaPerfil
+import com.medsync.medsync.perfil.TelaPerfil
 import com.medsync.medsync.cadastroProdutos.CadastrarProdutos
 import com.medsync.medsync.desempenho.desempenho
 import com.medsync.medsync.estoque.estoque
@@ -240,6 +241,7 @@ fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
 
     //toast
     var showToastSemAcesso by remember { mutableStateOf(false) }
+    var showToastBV by remember { mutableStateOf(true) }
 
 
     // background
@@ -254,26 +256,34 @@ fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
             .background(Color.White)
             .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
+          //  showToastBV = true
+
             // cadastrar produto
             Box(Modifier
                 .fillMaxWidth()
                 .background(boxColor, shape = RoundedCornerShape(25.dp))
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onPress = { offset ->
-                            boxColor = Blue10
-                            textColor = Color.White
-                            iconColor = Color.White
-                            try {
-                                awaitRelease()
-                            } finally {
-                                boxColor = Blue20 // Cor padrão
-                                textColor = Blue10
-                                iconColor = Blue10
+                        onPress = {
+                            if (tipoUsuario == "administrador") {
+                                boxColor = Blue10
+                                textColor = Color.White
+                                iconColor = Color.White
+                                try {
+                                    awaitRelease()
+                                } finally {
+                                    boxColor = Blue20
+                                    textColor = Blue10
+                                    iconColor = Blue10
+                                }
                             }
                         },
                         onTap = {
-                            context.startActivity(intentProdutos)
+                            if(tipoUsuario == "administrador"){
+                                context.startActivity(intentProdutos)
+                            }else{
+                                showToastSemAcesso = true;
+                            }
                         }
                     )
                 }, contentAlignment = Alignment.Center)
@@ -309,11 +319,7 @@ fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
                             }
                         },
                         onTap = {
-                           if(tipoUsuario == "administrador"){
-                               context.startActivity(intentProdutos)
-                           }else{
-                               showToastSemAcesso = true;
-                           }
+                               context.startActivity(intentEstoque)
                         }
                     )
                 }, contentAlignment = Alignment.Center)
@@ -454,7 +460,7 @@ fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
             Spacer(modifier = Modifier.padding(10.dp))
 
         }// fim do colum opções
-        CustomToast(
+        com.medsync.medsync.menu.CustomToast(
             show = showToastSemAcesso,
             message = "Sem permissão!",
             texto = Color.White,
@@ -466,6 +472,21 @@ fun Menu(modifier: Modifier = Modifier, viewModel: menuViewModel) {
             if (showToastSemAcesso) {
                 delay(2000)
                 showToastSemAcesso = false
+            }
+        }
+
+        com.medsync.medsync.menu.CustomToast(
+            show = showToastBV,
+            message = "Bem vindo!",
+            texto = Blue10,
+            icone = Blue10,
+            backgroundColor = Blue20,
+            iconVec = Icons.Filled.Login
+        )
+        LaunchedEffect(key1 = showToastBV) {
+            if (showToastBV) {
+                delay(2000)
+                showToastBV= false
             }
         }
 

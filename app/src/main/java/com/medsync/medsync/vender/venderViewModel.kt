@@ -5,11 +5,20 @@ import androidx.compose.runtime.mutableStateOf
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.medsync.medsync.estoque.Produto
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class venderViewModel {
+
+    data class ItemCarrinho(
+        val produto: Produto,
+        val quantidade: Int
+    )
 
     // Lista completa de produtos
     private val _produtoList = MutableStateFlow<List<Produto>>(emptyList())
@@ -39,7 +48,7 @@ class venderViewModel {
 
     // Carrinho
     private val _itensCarrinho = MutableStateFlow<List<ItemCarrinho>>(emptyList())
-    val itensCarrinho: StateFlow<List<ItemCarrinho>> = _itensCarrinho.asStateFlow()
+    val itensCarrinho: StateFlow<List<ItemCarrinho>> = _itensCarrinho
 
     // Seletor
     private val _produtoSelecionado = MutableStateFlow<Produto?>(null)
@@ -53,12 +62,18 @@ class venderViewModel {
     private val _produtoAdicionado = MutableStateFlow(false)
     val produtoAdicionado: StateFlow<Boolean> = _produtoAdicionado
 
-    private val _nomeCliente = MutableStateFlow("")
-    val nomeCliente: StateFlow<String> = _nomeCliente.asStateFlow()
+    private val _totalVenda = MutableStateFlow(0.0)
+    val totalVenda: StateFlow<Double> = _totalVenda
 
-    private val _formaPagamento = MutableStateFlow("")
-    val formaPagamento: StateFlow<String> = _formaPagamento.asStateFlow()
 
+    init {
+        itensCarrinho
+            .onEach { lista ->
+                val total = lista.sumOf { it.produto.precoVenda.toDouble() * it.quantidade }
+                _totalVenda.value = total
+            }
+            .launchIn(scope = CoroutineScope(Dispatchers.Default))
+    }
 
 
 // funções identificadoras
@@ -158,22 +173,18 @@ class venderViewModel {
 
     // funções de operação
     fun adicionarAoCarrinho(produto: Produto, quantidade: Int) {
-        if (quantidade <= 0) return
+        val listaAtualizada = _itensCarrinho.value.toMutableList()
 
-        val listaAtual = _itensCarrinho.value.toMutableList()
-
-        // Verifica se o produto já está no carrinho
-        val itemExistente = listaAtual.find { it.produto.nomeProduto == produto.nomeProduto }
-
-        if (itemExistente != null) {
-            // Atualiza a quantidade
-            itemExistente.quantidade += quantidade
+        val existente = listaAtualizada.find { it.produto.id == produto.id }
+        if (existente != null) {
+            // Se o produto já está no carrinho, atualiza a quantidade
+            val novaQuantidade = existente.quantidade + quantidade
+            listaAtualizada[listaAtualizada.indexOf(existente)] = ItemCarrinho(produto, novaQuantidade)
         } else {
-            // Adiciona novo item
-            listaAtual.add(ItemCarrinho(produto, quantidade))
+            listaAtualizada.add(ItemCarrinho(produto, quantidade))
         }
 
-        _itensCarrinho.value = listaAtual
+        _itensCarrinho.value = listaAtualizada
     }
 
     fun marcarProdutoComoAdicionado() {
@@ -197,14 +208,23 @@ class venderViewModel {
             }
     }
 
-    // funções de dados da venda
+    // Armazenar nome do cliente
+    private val _nomeCliente = MutableStateFlow("")
+    val nomeCliente: StateFlow<String> = _nomeCliente
+
     fun setNomeCliente(nome: String) {
         _nomeCliente.value = nome
     }
 
+    // Armazenar forma de pagamento
+    private val _formaPagamento = MutableStateFlow("")
+    val formaPagamento: StateFlow<String> = _formaPagamento
+
     fun setFormaPagamento(forma: String) {
         _formaPagamento.value = forma
     }
+
+
 
 
 
